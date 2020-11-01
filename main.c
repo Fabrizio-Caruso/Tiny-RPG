@@ -7,10 +7,17 @@
 #define MAX_NAME_SIZE 12
 #define NUM_OF_CHARACTERS 3
 
-#define NUM_OF_STATS 3
-#define STRENGTH_INDEX 0
-#define DEXTERITY_INDEX 1
-#define CHARISMA_INDEX 2
+#define NUM_OF_STATIC_STATS 2
+#define RACE_INDEX 0
+#define CLASS_INDEX 1
+
+
+#define NUM_OF_DYNAMIC_STATS 3
+#define STRENGTH_INDEX 2
+#define DEXTERITY_INDEX 3
+#define CHARISMA_INDEX 4
+
+#define NUM_OF_STATS (NUM_OF_STATIC_STATS + NUM_OF_DYNAMIC_STATS)
 
 #define NUM_OF_RACES 4
 #define HUMAN 0
@@ -37,8 +44,6 @@
 #define set_character_stat(_character_ptr, _stat_index, _value)  (_character_ptr)->stat[_stat_index] =  _value
 
 #define set_character_name(_character_ptr, _name)  strcpy((_character_ptr)->name,_name)
-#define set_character_race(_character_ptr, _race)  (_character_ptr)->race =  _race
-#define set_character_class(_character_ptr, _class)  (_character_ptr)->class =  _class
 
 #define increase_character_strength(_character_ptr, _stat_index)  ++(character_ptr)->stat[_stat_index]
 
@@ -55,18 +60,15 @@ char *class_names[NUM_OF_CLASSES] = {
 
 
 char *stats_names[NUM_OF_STATS] = {
+    "race", "class", 
     "strength", "dexterity", "charisma"
 };
-
-// int player_stats[NUM_OF_STATS] = {50,45,10};
 
 
 struct CharacterStruct 
 {
     uint8_t stat[NUM_OF_STATS];
     
-    uint8_t race;
-    uint8_t class;
     char name[MAX_NAME_SIZE];
 };
 typedef struct CharacterStruct Character;
@@ -74,7 +76,6 @@ typedef struct CharacterStruct Character;
 
 Character characters[NUM_OF_CHARACTERS];
 
-// Character player;
 
 char *characters_names[NUM_OF_CHARACTERS] = 
 {
@@ -84,27 +85,16 @@ char *characters_names[NUM_OF_CHARACTERS] =
 };
 
 
-uint8_t characters_races[NUM_OF_CHARACTERS] = 
-{
-    HUMAN, ORC, ELF
-};
-
-uint8_t characters_classes[NUM_OF_CHARACTERS] = 
-{
-    NONE, WARRIOR, ASSASSIN 
-};
-
-
 uint8_t characters_stats[NUM_OF_CHARACTERS][NUM_OF_STATS] =
 {
     {
-        50,55,10
+        HUMAN, NONE, 50,55,10
     },
     {
-        20,25,5
+        ORC, WARRIOR, 20,25,5
     },
     {
-        40,10,2
+        ELF, ASSASSIN, 40,10,2
     }
 };
 
@@ -117,27 +107,6 @@ void initNames(void)
     for(i=0;i<NUM_OF_CHARACTERS;++i)
     {
         memcpy(&characters[i].name,characters_names[i],MAX_NAME_SIZE);
-    }
-}
-
-void initRaces(void)
-{
-    uint8_t char_index;
-    
-    for(char_index=0;char_index<NUM_OF_CHARACTERS;++char_index)
-    {
-        set_character_race(&characters[char_index], characters_races[char_index]);
-    }
-}
-
-
-void initClasses(void)
-{
-    uint8_t char_index;
-    
-    for(char_index=0;char_index<NUM_OF_CHARACTERS;++char_index)
-    {
-        set_character_class(&characters[char_index], characters_classes[char_index]);
     }
 }
 
@@ -160,8 +129,6 @@ void initFeatures(void)
 void initCharacters(void)
 {
     initNames();
-    initRaces();
-    initClasses();
     initFeatures();
 }
 
@@ -172,10 +139,13 @@ void showCharacter (const Character* character_ptr)
     
     printf("\n");
     printf("Name: %s\n", character_ptr->name);
-    printf("Race: %s\n", race_names[character_ptr->race]);
-    printf("Class: %s\n", class_names[character_ptr->class]);
     
-    for(stat_index = 0; stat_index<NUM_OF_STATS; ++stat_index)
+
+    printf("%s: %s\n", stats_names[RACE_INDEX], race_names[character_ptr->stat[RACE_INDEX]]);
+    printf("%s: %s\n", stats_names[CLASS_INDEX], class_names[character_ptr->stat[CLASS_INDEX]]);
+
+    
+    for(stat_index=NUM_OF_STATIC_STATS; stat_index<NUM_OF_STATS; ++stat_index)
     {
         printf("%s: %u\n", stats_names[stat_index], character_ptr->stat[stat_index]);
     }
@@ -194,27 +164,10 @@ void showCharacters(void)
 }
 
 
-// void initPlayer(void)
-// {
-    // uint8_t stat_index;
-    
-    // for(stat_index=0;stat_index<NUM_OF_STATS;++stat_index)
-    // {
-        // set_character_stat(&player, stat_index, player_stats[stat_index]);
-    // }
-    // set_character_name(&player, PLAYER_NAME);
-    // set_character_race(&player, PLAYER_RACE);
-    // set_character_class(&player, PLAYER_CLASS);
-// }
-
 int main(void)
 {
 
-    // initPlayer();
-
     initCharacters();
-    
-    // showCharacter(&player);
     
     showCharacters();
 
