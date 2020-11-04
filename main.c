@@ -4,7 +4,10 @@
 #include <stddef.h>
 #include <string.h>
 
-#define MAX_NAME_SIZE 12
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+
+#define MAX_NAME_SIZE 20
 #define NUM_OF_CHARACTERS 3
 
 #define NUM_OF_STATIC_STATS 2
@@ -12,22 +15,22 @@
 #define CLASS 1
 
 
-#define NUM_OF_DYNAMIC_STATS 7
+#define NUM_OF_DYNAMIC_STATS 8
 #define LIFE         (NUM_OF_STATIC_STATS+0)
 #define STRENGTH     (NUM_OF_STATIC_STATS+1)
 #define DEXTERITY    (NUM_OF_STATIC_STATS+2)
 #define CHARISMA     (NUM_OF_STATIC_STATS+3)
-#define STAMINA      (NUM_OF_STATIC_STATS+4)
-#define INTELLIGENCE (NUM_OF_STATIC_STATS+5)
-#define GOLD         (NUM_OF_STATIC_STATS+6)
+#define INTELLIGENCE (NUM_OF_STATIC_STATS+4)
+#define STAMINA      (NUM_OF_STATIC_STATS+5)
+#define MANA         (NUM_OF_STATIC_STATS+6)
+#define GOLD         (NUM_OF_STATIC_STATS+7)
 
 #define NUM_OF_STATS (NUM_OF_STATIC_STATS + NUM_OF_DYNAMIC_STATS)
 
-#define NUM_OF_RACES 4
+#define NUM_OF_RACES 3
 #define HUMAN 0
 #define ORC 1
 #define ELF 2
-#define UNDEAD 3
 
 #define NUM_OF_CLASSES 5
 #define NONE 0
@@ -36,26 +39,67 @@
 #define BARD 3
 #define ASSASSIN 4
 
+#define LEADER 0
 #define MAX_PLAYER_PARTY_SIZE 6
 #define MAX_ENEMY_PARTY_SIZE 12
 
 #define set_stat(_character_ptr, _stat_index, _value)  (_character_ptr)->stat[_stat_index] =  _value
 
-#define set_character_name(_character_ptr, _name)  strcpy((_character_ptr)->name,_name)
+#define set_race(_character_ptr, _value)          (_character_ptr)->stat[RACE] =  _value
+#define set_class(_character_ptr, _value)         (_character_ptr)->stat[CLASS] =  _value
+#define set_life(_character_ptr, _value)          (_character_ptr)->stat[LIFE] =  _value
+#define set_strength(_character_ptr, _value)      (_character_ptr)->stat[STRENGTH] =  _value
+#define set_dexterity(_character_ptr, _value)     (_character_ptr)->stat[DEXTERITY] =  _value
+#define set_charisma(_character_ptr, _value)      (_character_ptr)->stat[CHARISMA] =  _value
+#define set_intelligence(_character_ptr, _value)  (_character_ptr)->stat[INTELLIGENCE] =  _value
+#define set_stamina(_character_ptr, _value)       (_character_ptr)->stat[STAMINA] =  _value
+#define set_mana(_character_ptr, _value)          (_character_ptr)->stat[MANA] =  _value
+#define set_gold(_character_ptr, _value)          (_character_ptr)->stat[GOLD] =  _value
+
+
+#define set_name(_character_ptr, _name)  strcpy((_character_ptr)->name,_name)
 
 #define get_stat(_character_ptr, _stat_index) (_character_ptr->stat[_stat_index])
 
-#define increase_character_stat(_character_ptr, _stat_index)  ++(character_ptr)->stat[_stat_index]
+#define get_life(_character_ptr) get_stat(_character_ptr,LIFE)
+#define get_strength(_character_ptr) get_stat(_character_ptr,STRENGTH)
+#define get_dexterity(_character_ptr) get_stat(_character_ptr,DEXTERITY)
+#define get_stamina(_character_ptr) get_stat(_character_ptr,STAMINA)
 
-#define decrease_character_stat(_character_ptr, _stat_index)  --(character_ptr)->stat[_stat_index]
+
+#define increase_stat(_character_ptr, _stat_index, _value)  ((_character_ptr)->stat[_stat_index])+=_value;
+
+#define decrease_stat(_character_ptr, _stat_index, _value)  ((_character_ptr)->stat[_stat_index])-=_value;
+
+#define increase_stamina(_character_ptr, _value) increase_stat(_character_ptr, STAMINA, _value)
+#define decrease_stamina(_character_ptr, _value) decrease_stat(_character_ptr, STAMINA, _value)
 
 
-// Character* player_list[MAX_PLAYER_PARTY_SIZE];
-// Character* enemy_list[MAX_ENEMY_PARTY_SIZE];
+#define CHARACTER_NAMES \
+{ \
+    "Conan", \
+    "Ulrik", \
+    "Sheewa" \
+}
+
+#define CONAN    0
+#define ULRIK    1
+#define SHEEWA   2
+
+char *stats_names[NUM_OF_STATS] = {
+//                    RACE     CLASS       LIFE     STRENGTH     DEXTERITY     CHARSIMA      INTELL          STAMINA      MANA     GOLD
+                     "race",   "class",    "life",  "strength",  "dexterity",  "charisma",  "intelligence",  "stamina",   "mana",  "gold"};
+#define CONAN_STATS  {HUMAN,    NONE,       50,      25,           55,           10,           40,               5,         10,       10}
+#define ULRIK_STATS  {ORC,      WARRIOR,    30,      15,           10,            5,           30,              20,         20,        5}
+#define SHEEWA_STATS {ELF,      ASSASSIN,   20,      10,           20,            2,           60,              40,         40,       30}
+
+// #define VERBOSE_OFF 0
+#define VERBOSE_OFF 1
+#define VERBOSE_ON  1
 
 
 char *race_names[NUM_OF_RACES] = {
-    "human", "orc", "elf", "undead"
+    "human", "orc", "elf"
 };
 
 char *class_names[NUM_OF_CLASSES] = {
@@ -64,11 +108,7 @@ char *class_names[NUM_OF_CLASSES] = {
 
 
 
-char *stats_names[NUM_OF_STATS] = {
-    "race", "class", 
-    "life",
-    "strength", "dexterity", "charisma", "stamina", "intelligence", "gold"
-};
+
 
 
 struct CharacterStruct 
@@ -80,28 +120,33 @@ struct CharacterStruct
 typedef struct CharacterStruct Character;
 
 
+Character *player_party[MAX_PLAYER_PARTY_SIZE];
+
+
+uint8_t player_party_size;
+
+Character *enemy_party[MAX_ENEMY_PARTY_SIZE];
+
+uint8_t enemy_party_size;
+
+
 Character characters[NUM_OF_CHARACTERS];
 
+Character* conan_ptr = &characters[CONAN];
 
-char *characters_names[NUM_OF_CHARACTERS] = 
-{
-    "Conan",
-    "Ulrik", 
-    "Tondor"
-};
+Character* ulrik_ptr = &characters[ULRIK];
+
+Character* sheewa_ptr = &characters[SHEEWA];
+
+
+
+char *characters_names[NUM_OF_CHARACTERS] = CHARACTER_NAMES;
+
 
 
 uint8_t characters_stats[NUM_OF_CHARACTERS][NUM_OF_STATS] =
 {
-    {
-        HUMAN, NONE,     50,  5, 55, 10, 40,  0
-    },
-    { 
-        ORC,   WARRIOR,  50,  8, 40,  5, 30, 20
-    },
-    {
-        ELF,   ASSASSIN, 30,  3, 10,  2, 60, 80
-    }
+    CONAN_STATS, ULRIK_STATS, SHEEWA_STATS
 };
 
 
@@ -163,15 +208,26 @@ void showCharacters(void)
 {
     uint8_t i;
     
-    for(i=0;i<NUM_OF_CHARACTERS;++i)
+    printf("\n");
+    printf("Humans: \n");
+    printf("\n");
+    for(i=0;i<player_party_size;++i)
     {
-        showCharacter(&characters[i]);
+        showCharacter(player_party[i]);
+    }
+    
+    printf("\n");
+    printf("Orcs: \n");
+    printf("\n");
+    for(i=0;i<enemy_party_size;++i)
+    {
+        showCharacter(enemy_party[i]);
     }
 }
 
 void blow(Character *character_ptr, uint8_t value)
 {
-    if(get_stat(character_ptr,LIFE)>value)
+    if(get_life(character_ptr)>value)
     {
         character_ptr->stat[LIFE]-=value;
     }
@@ -181,7 +237,11 @@ void blow(Character *character_ptr, uint8_t value)
     }
 }
 
-#define low_stamina(stamina) (stamina<10)
+#define STAMINA_RECHARGE 10
+#define LOW_STAMINA_THRESHOLD 10
+#define low_stamina(stamina) (stamina<LOW_STAMINA_THRESHOLD)
+
+#define ATTACK_FACTOR_ADVANTAGE 2
 
 uint8_t fight_stat(uint8_t stat_value, uint8_t stamina)
 {
@@ -193,14 +253,22 @@ uint8_t attack(Character *attacker_ptr, Character* defender_ptr)
     uint8_t attacker_stamina = get_stat(attacker_ptr,STAMINA);
     uint8_t blow_hits;
     
-    if (2*fight_stat(get_stat(attacker_ptr,DEXTERITY), attacker_stamina) >
-        fight_stat(get_stat(defender_ptr,DEXTERITY), get_stat(defender_ptr,STAMINA)))
+    if(attacker_stamina)
     {
-        blow_hits = fight_stat(get_stat(attacker_ptr,STRENGTH), attacker_stamina);
-        blow(defender_ptr, blow_hits);
+        if (ATTACK_FACTOR_ADVANTAGE*fight_stat(get_stat(attacker_ptr,DEXTERITY), attacker_stamina) >
+            fight_stat(get_stat(defender_ptr,DEXTERITY), get_stat(defender_ptr,STAMINA)))
+        {
+            blow_hits = fight_stat(get_stat(attacker_ptr,STRENGTH), attacker_stamina);
+            blow(defender_ptr, blow_hits);
+        }
+        else{
+            blow_hits = 0;
+        }
+        decrease_stamina(attacker_ptr,1);
     }
-    else{
-        blow_hits = 0;
+    else
+    {
+        increase_stamina(attacker_ptr,STAMINA_RECHARGE);
     }
 
     return blow_hits;
@@ -211,63 +279,196 @@ void attack_string(Character *attacker, Character *defender)
     uint8_t attack_force = attack(attacker, defender);
     if(attack_force)
     {
-        printf("%s attacks and hits %s with force = %d\n", attacker->name, defender->name, attack_force);
+        printf("\n%s attacks \nand hits %s \nwith force = %d\n", attacker->name, defender->name, attack_force);
     }
     else
     {
-        printf("%s attacks but %s fends off the attack\n", attacker->name, defender->name);
+        printf("\n%s attacks \nbut %s \nfends off the attack\n", attacker->name, defender->name);
     }
     printf("\n");
 }
 
-void fight_round(Character* first_ptr, Character* second_ptr)
-{
-    
-    attack_string(first_ptr, second_ptr);
 
-    if(get_stat(second_ptr,LIFE))
+void fight_round(Character* first_ptr, Character* second_ptr, uint8_t verbose)
+{
+
+    if(verbose)
+    {
+        attack_string(first_ptr, second_ptr);
+    }
+    else
+    {
+        attack(first_ptr, second_ptr);
+    }
+    if(verbose && get_life(second_ptr))
     {
         attack_string(second_ptr, first_ptr);
+    }
+    else
+    {
+        attack(second_ptr, first_ptr);
     }
 }
 
 
-void test_fight(Character* first_ptr, Character* second_ptr)
+
+void many_vs_one_fight(Character *group_ptr, uint8_t enemy_number, Character *single_ptr)
 {
-    uint8_t round = 1;
- 
-    while((get_stat(first_ptr,LIFE))&&(get_stat(second_ptr,LIFE)))
+    uint8_t i;
+    
+    for(i=0;i<enemy_number;++i)
     {
-        printf("-----------------------------\n");
-        printf("round %d", round++);
-        showCharacter(first_ptr);
-        showCharacter(second_ptr);
-        printf("-----------------------------\n");
-        
+        if(get_life(group_ptr) && get_life(single_ptr))
+        {
+            fight_round(single_ptr, group_ptr, VERBOSE_ON);
+        }
+        else
+        {
+            break;
+        }
+        group_ptr +=1;
+    }
+}
+
+
+void party_fight(void)
+{
+    uint8_t min_size = MIN(player_party_size, enemy_party_size);
+    uint8_t i;
+    uint8_t round = 0;
+    
+    Character* player_ptr = player_party[LEADER];
+    Character* enemy_ptr = enemy_party[LEADER];
+    
+    while (get_life(player_ptr) && get_life(enemy_ptr))
+    {
+        printf("\n\n\n------------------\n");
+        printf("round %d\n", ++round);
+        printf("------------------\n");
+        getchar();
+        showCharacter(player_ptr);
+        getchar();
+        showCharacter(enemy_ptr);
         getchar();
         
-        fight_round(first_ptr, second_ptr);
+        printf("\nFight!\n");
         getchar();
+        
+        fight_round(player_party[LEADER],enemy_party[LEADER], VERBOSE_ON);
+        
+        if((get_life(player_ptr)) && (get_life(enemy_ptr)))
+        {
+            for(i=1;i<min_size;++i)
+            {
+                Character* player_party_member_ptr = player_party[i && get_life(player_party[i])];
+                Character* enemy_party_member_ptr  = enemy_party[i && get_life(enemy_party[i])];
+                uint8_t verbose = get_life(player_party[i]) * get_life(enemy_party[i]);
+                
+                fight_round(player_party_member_ptr, enemy_party_member_ptr, verbose);
+            }
+            if(player_party_size>min_size) // You have more party members
+            {
+                many_vs_one_fight(player_party[i], player_party_size-enemy_party_size, enemy_ptr);
+            }
+            else // The enemy party has more members
+            {
+                many_vs_one_fight(enemy_party[i], enemy_party_size - player_party_size, player_ptr);
+            }
+        }
     }
-    if(first_ptr->stat[LIFE])
+    
+    showCharacters();
+}
+
+
+Character orcs[MAX_ENEMY_PARTY_SIZE];
+Character humans[MAX_ENEMY_PARTY_SIZE];
+
+// "race",   "class",    "life",  "strength",  "dexterity",  "charisma",  "intelligence",  "stamina",   "mana",  "gold"};
+
+void set_stats(Character *character_ptr, char* name, uint8_t race, uint8_t class, 
+               uint8_t life, uint8_t strength, uint8_t dexterity,
+               uint8_t charisma, uint8_t intelligence, 
+               uint8_t stamina, uint8_t mana, uint8_t gold)
+{
+    set_name(character_ptr, name);
+    set_race(character_ptr, race);
+    set_class(character_ptr, class);
+    
+    set_life(character_ptr, life);
+    set_strength(character_ptr, strength);
+    set_dexterity(character_ptr, dexterity);
+    set_charisma(character_ptr, charisma);
+    set_intelligence(character_ptr, intelligence);
+    
+    set_stamina(character_ptr, stamina);
+    set_mana(character_ptr, mana);
+    set_gold(character_ptr, gold);
+}
+
+void initPlayerParty(void)
+{
+    uint8_t i;
+    
+    player_party[LEADER] = conan_ptr;
+    
+    player_party_size = 4;
+
+    for(i=1;i<player_party_size;++i)
     {
-        printf("%s wins\n", first_ptr->name);
+        set_stats(&humans[i-1],"your soldier", HUMAN, WARRIOR,10,10,10,10,10,15,10,10);
+        player_party[i] = &humans[i-1];
     }
-    else
+    
+}
+
+void initEnemyParty(void)
+{
+    uint8_t i;
+    
+    enemy_party_size = 8;
+    enemy_party[LEADER] = ulrik_ptr;
+
+    for(i=1;i<enemy_party_size;++i)
     {
-        printf("%s wins\n", second_ptr->name);
+        set_stats(&orcs[i-1],"an enemy orc", ORC, WARRIOR,12,12,8,10,10,15,10,10);
+        enemy_party[i] = &orcs[i-1];
     }
+
 }
 
 int main(void)
 {
 
+    Character *winner_ptr;
+    
     initCharacters();
+    
+    initPlayerParty();
+    initEnemyParty();
     
     showCharacters();
     
     getchar();
-    test_fight(&characters[0], &characters[1]);
+    
+    party_fight();
+    
+    getchar();
+    printf("\n\n");
+    printf("-------------\n\n");
+    if(get_life(player_party[LEADER]))
+    {
+        winner_ptr = player_party[LEADER];
+    }
+    else
+    {
+        winner_ptr = enemy_party[LEADER];
+    }
+    printf("\n%s wins!\n", winner_ptr->name);
+    getchar();
+    printf("\n\n");
+    printf("-------------\n\n");
+    showCharacters();
 
     return EXIT_SUCCESS;
 }
