@@ -93,8 +93,8 @@ char *stats_names[NUM_OF_STATS] = {
 #define ULRIK_STATS  {ORC,      WARRIOR,    30,      15,           10,            5,           30,              20,         20,        5}
 #define SHEEWA_STATS {ELF,      ASSASSIN,   20,      10,           20,            2,           60,              40,         40,       30}
 
-// #define VERBOSE_OFF 0
-#define VERBOSE_OFF 1
+// #define VERBOSE_OFF 1
+#define VERBOSE_OFF 0
 #define VERBOSE_ON  1
 
 
@@ -350,7 +350,8 @@ void party_fight(void)
     uint8_t min_size = MIN(player_party_size, enemy_party_size);
     uint8_t i;
     uint8_t round = 0;
-    
+    uint8_t verbose;
+
     Character* player_ptr = player_party[LEADER];
     Character* enemy_ptr = enemy_party[LEADER];
     
@@ -376,7 +377,7 @@ void party_fight(void)
             {
                 Character* player_party_member_ptr = player_party[i && get_life(player_party[i])];
                 Character* enemy_party_member_ptr  = enemy_party[i && get_life(enemy_party[i])];
-                uint8_t verbose = get_life(player_party[i]) * get_life(enemy_party[i]);
+                verbose = !(get_life(player_party[i]) && get_life(enemy_party[i]));
                 
                 fight_round(player_party_member_ptr, enemy_party_member_ptr, verbose);
             }
