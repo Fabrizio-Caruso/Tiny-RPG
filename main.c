@@ -59,7 +59,7 @@
 
 #define set_name(_character_ptr, _name)  strcpy((_character_ptr)->name,_name)
 
-#define get_stat(_character_ptr, _stat_index) (_character_ptr->stat[_stat_index])
+#define get_stat(_character_ptr, _stat_index) _character_ptr->stat[_stat_index]
 
 #define get_life(_character_ptr) get_stat(_character_ptr,LIFE)
 #define get_strength(_character_ptr) get_stat(_character_ptr,STRENGTH)
@@ -184,6 +184,17 @@ void initCharacters(void)
 }
 
 
+void showFightStats(const Character* character_ptr)
+{
+    printf("\n");
+    printf("Name: %s - life: %d - stamina: %d - strength: %d - dexterity: %d\n", 
+           character_ptr->name, 
+           get_life(character_ptr), get_stamina(character_ptr),
+           get_strength(character_ptr), get_dexterity(character_ptr));
+    
+}
+
+
 void showCharacter (const Character* character_ptr)
 {
     uint8_t stat_index;
@@ -279,13 +290,12 @@ void attack_string(Character *attacker, Character *defender)
     uint8_t attack_force = attack(attacker, defender);
     if(attack_force)
     {
-        printf("\n%s attacks \nand hits %s \nwith force = %d\n", attacker->name, defender->name, attack_force);
+        printf("%s hits %s with force=%d\n", attacker->name, defender->name, attack_force);
     }
     else
     {
-        printf("\n%s attacks \nbut %s \nfends off the attack\n", attacker->name, defender->name);
+        printf("%s attacks but %s fends off the attack\n", attacker->name, defender->name);
     }
-    printf("\n");
 }
 
 
@@ -307,6 +317,10 @@ void fight_round(Character* first_ptr, Character* second_ptr, uint8_t verbose)
     else
     {
         attack(second_ptr, first_ptr);
+    }
+    if(verbose)
+    {
+        printf("\n");
     }
 }
 
@@ -346,9 +360,9 @@ void party_fight(void)
         printf("round %d\n", ++round);
         printf("------------------\n");
         getchar();
-        showCharacter(player_ptr);
+        showFightStats(player_ptr);
         getchar();
-        showCharacter(enemy_ptr);
+        showFightStats(enemy_ptr);
         getchar();
         
         printf("\nFight!\n");
@@ -377,7 +391,6 @@ void party_fight(void)
         }
     }
     
-    showCharacters();
 }
 
 
@@ -412,7 +425,7 @@ void initPlayerParty(void)
     
     player_party[LEADER] = conan_ptr;
     
-    player_party_size = 4;
+    player_party_size = 2;
 
     for(i=1;i<player_party_size;++i)
     {
@@ -426,12 +439,12 @@ void initEnemyParty(void)
 {
     uint8_t i;
     
-    enemy_party_size = 8;
+    enemy_party_size = 12;
     enemy_party[LEADER] = ulrik_ptr;
 
     for(i=1;i<enemy_party_size;++i)
     {
-        set_stats(&orcs[i-1],"an enemy orc", ORC, WARRIOR,12,12,8,10,10,15,10,10);
+        set_stats(&orcs[i-1],"an enemy orc", ORC, WARRIOR,18,12,8,10,10,15,10,10);
         enemy_party[i] = &orcs[i-1];
     }
 
