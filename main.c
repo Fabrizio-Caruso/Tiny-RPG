@@ -309,7 +309,7 @@ void attack_string(Character *attacker, Character *defender)
 void fight_round(Character* first_ptr, Character* second_ptr, uint8_t verbose)
 {
 
-// DEBUG
+// TODO: DEBUG
     verbose = 1;
     
     if(verbose)
@@ -396,6 +396,8 @@ void party_fight(void)
         
         fight_round(player_party[LEADER],enemy_party[LEADER], VERBOSE_ON);
         
+        printf("----------------------------------\n");
+        
         if((get_life(player_ptr)) && (get_life(enemy_ptr)))
         {
             for(i=1;i<min_size;++i)
@@ -404,8 +406,13 @@ void party_fight(void)
                 Character* enemy_party_member_ptr  = enemy_party[i*(i && get_life(enemy_party[i]))];
                 verbose = !(get_life(player_party[i]) && get_life(enemy_party[i]));
                 
-                fight_round(player_party_member_ptr, enemy_party_member_ptr, verbose);
+                if(player_party_member_ptr!=player_ptr || enemy_party_member_ptr!=enemy_ptr)
+                {
+                    fight_round(player_party_member_ptr, enemy_party_member_ptr, verbose);
+                }
             }
+            printf("----------------------------------\n");
+
             if(player_party_size>min_size) // You have more party members
             {
                 many_vs_one_fight(player_party[i], player_party_size-enemy_party_size, enemy_ptr);
