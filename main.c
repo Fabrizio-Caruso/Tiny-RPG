@@ -62,6 +62,7 @@
 
 #define get_stat(_character_ptr, _stat_index) _character_ptr->stat[_stat_index]
 
+#define get_name(_character_ptr) _character_ptr->name
 #define get_life(_character_ptr) get_stat(_character_ptr,LIFE)
 #define get_strength(_character_ptr) get_stat(_character_ptr,STRENGTH)
 #define get_dexterity(_character_ptr) get_stat(_character_ptr,DEXTERITY)
@@ -297,6 +298,7 @@ uint8_t attack(Character *attacker_ptr, Character* defender_ptr)
     }
     else
     {
+        // printf("%s recovers some stamina\n", get_name(attacker_ptr));
         increase_stamina(attacker_ptr,STAMINA_RECHARGE);
     }
 
@@ -390,6 +392,22 @@ void many_vs_one_fight(Character *group_ptr, uint8_t enemy_number, Character *si
     }
 }
 
+void print_stamina_string(Character *character_ptr)
+{
+    
+    uint8_t character_stamina = get_stamina(character_ptr);
+    
+    if(!character_stamina)
+    {
+        printf("%s needs a stop to recover some stamina!\n\n", get_name(character_ptr));
+    }
+    else if(low_stamina(character_stamina))
+        {
+            printf("%s has low stamina\n\n", get_name(character_ptr));
+        }
+    sleep(1);
+}
+
 
 void party_fight(void)
 {
@@ -414,6 +432,9 @@ void party_fight(void)
         
         printf("\nFight!\n");
         getchar();
+        
+        print_stamina_string(player_ptr);
+        print_stamina_string(enemy_ptr);
         
         fight_round(player_party[LEADER],enemy_party[LEADER], VERBOSE_ON);
         
