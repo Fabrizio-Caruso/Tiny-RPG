@@ -2,4 +2,5 @@
 *.exe
 *.out
 *.o
+*.exe.backup
 
