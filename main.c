@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
+#include <unistd.h>
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
@@ -199,7 +200,7 @@ void showFightStats(const Character* character_ptr)
 }
 
 
-void showCharacter (const Character* character_ptr)
+void showAllStats(const Character* character_ptr)
 {
     uint8_t stat_index;
     
@@ -219,7 +220,8 @@ void showCharacter (const Character* character_ptr)
 }
 
 
-void showCharacters(void)
+
+void _showCharacters(void (*showCharacterFunction) (const Character *))
 {
     uint8_t i;
     
@@ -228,7 +230,7 @@ void showCharacters(void)
     printf("\n");
     for(i=0;i<player_party_size;++i)
     {
-        showCharacter(player_party[i]);
+        showCharacterFunction(player_party[i]);
     }
     
     printf("\n");
@@ -236,10 +238,21 @@ void showCharacters(void)
     printf("\n");
     for(i=0;i<enemy_party_size;++i)
     {
-        showCharacter(enemy_party[i]);
+        showCharacterFunction(enemy_party[i]);
     }
 }
 
+void showFightStatsForAllCharacters(void)
+{
+    _showCharacters(showFightStats);
+}
+
+void showAllStatsForAllCharacters(void)
+{
+    _showCharacters(showAllStats);
+}
+
+// void showCharacters
 
 void blow(Character *attacker_ptr, Character *defender_ptr, uint8_t value)
 {
@@ -249,9 +262,7 @@ void blow(Character *attacker_ptr, Character *defender_ptr, uint8_t value)
     }
     else
     {
-        // printf("%s is dead!\n", defender_ptr->name);
         set_stat(defender_ptr,LIFE,0);
-        // increase_experience(attacker_ptr,1+get_experience(defender_ptr)/20);
     }
 }
 
@@ -303,6 +314,7 @@ void attack_string(Character *attacker, Character *defender)
     {
         printf("%s attacks but %s fends off the attack\n", attacker->name, defender->name);
     }
+    sleep(1);
 }
 
 
@@ -310,7 +322,7 @@ void fight_round(Character* first_ptr, Character* second_ptr, uint8_t verbose)
 {
 
 // TODO: DEBUG
-    verbose = 1;
+    // verbose = 1;
     
     if(verbose)
     {
@@ -334,13 +346,22 @@ void fight_round(Character* first_ptr, Character* second_ptr, uint8_t verbose)
         }
         if(!get_life(first_ptr)) // first_ptr is dead
         {
-            printf("%s is dead!\n", first_ptr->name);
+            if(!verbose)
+            {
+                printf("\n");
+            }
+            printf("%s kills %s!\n\n", second_ptr->name, first_ptr->name);
             increase_experience(second_ptr,1+get_experience(first_ptr)/20);
+            sleep(1);
         }
     }
     else // second_ptr is dead
     {
-        printf("%s is dead!\n", second_ptr->name);
+        if(!verbose)
+        {
+            printf("\n");
+        }
+        printf("%s kills %s!\n\n", first_ptr->name, second_ptr->name);
         increase_experience(first_ptr,1+get_experience(second_ptr)/20);
     }
     if(verbose)
@@ -502,7 +523,7 @@ int main(void)
     initPlayerParty();
     initEnemyParty();
     
-    showCharacters();
+    showAllStatsForAllCharacters();
     
     getchar();
     
@@ -523,7 +544,7 @@ int main(void)
     getchar();
     printf("\n\n");
     printf("-------------\n\n");
-    showCharacters();
+    showFightStatsForAllCharacters();
 
     return EXIT_SUCCESS;
 }
