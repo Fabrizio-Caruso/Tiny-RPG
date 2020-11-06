@@ -96,6 +96,7 @@ char *stats_names[NUM_OF_STATS] = {
 #define CONAN_STATS         HUMAN,    NONE,        100,       30,           55,           10,            0,             5,         10,       10
 #define ULRIK_STATS         ORC,      WARRIOR,      80,       15,           10,            5,            0,            20,         20,        5
 #define SHEEWA_STATS        ELF,      ASSASSIN,     20,       10,           20,            2,            0,            40,         40,       30
+
 #define HUMAN_SOLDIER_STATS HUMAN,    WARRIOR,      10,       10,           10,           10,            0,            15,         10,       10
 #define ORC_SOLDIER_STATS   ORC,      WARRIOR,      18,       12,           8,            10,            0,            15,         10,       10
 
@@ -392,7 +393,7 @@ void many_vs_one_fight(Character *group_ptr, uint8_t enemy_number, Character *si
     }
 }
 
-void print_stamina_string(Character *character_ptr)
+void print_stamina_string(const Character *character_ptr)
 {
     
     uint8_t character_stamina = get_stamina(character_ptr);
@@ -474,7 +475,7 @@ Character humans[MAX_ENEMY_PARTY_SIZE];
 
 // "race",   "class",    "life",  "strength",  "dexterity",  "charisma",  "experience",  "stamina",   "mana",  "gold"};
 
-void set_stats(Character *character_ptr, char* name, uint8_t race, uint8_t class, 
+void set_stats(Character *character_ptr, const char* name, uint8_t race, uint8_t class, 
                uint8_t life, uint8_t strength, uint8_t dexterity,
                uint8_t charisma, uint8_t experience, 
                uint8_t stamina, uint8_t mana, uint8_t gold)
