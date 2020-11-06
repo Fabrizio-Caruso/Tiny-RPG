@@ -43,6 +43,10 @@
 #define LEADER 0
 #define MAX_PLAYER_PARTY_SIZE 6
 #define MAX_ENEMY_PARTY_SIZE 12
+#define MAX_ORCS_SIZE 8 
+#define MAX_HUMANS_SIZE 8
+#define MAX_ELFS_SIZE 8
+
 
 #define set_stat(_character_ptr, _stat_index, _value)  (_character_ptr)->stat[_stat_index] =  _value
 
@@ -138,6 +142,20 @@ uint8_t enemy_party_size;
 
 
 Character characters[NUM_OF_CHARACTERS];
+
+
+#define STAMINA_RECHARGE 10
+#define LOW_STAMINA_THRESHOLD 10
+#define low_stamina(stamina) (stamina<LOW_STAMINA_THRESHOLD)
+
+#define ATTACK_FACTOR_ADVANTAGE 2
+
+
+Character orcs[MAX_ORCS_SIZE];
+Character humans[MAX_HUMANS_SIZE];
+Character elfs[MAX_ELFS_SIZE];
+
+
 
 Character* conan_ptr = &characters[CONAN];
 
@@ -256,7 +274,7 @@ void showAllStatsForAllCharacters(void)
 
 // void showCharacters
 
-void blow(Character *attacker_ptr, Character *defender_ptr, uint8_t value)
+void blow(Character *defender_ptr, uint8_t value)
 {
     if(get_life(defender_ptr)>value)
     {
@@ -268,11 +286,6 @@ void blow(Character *attacker_ptr, Character *defender_ptr, uint8_t value)
     }
 }
 
-#define STAMINA_RECHARGE 10
-#define LOW_STAMINA_THRESHOLD 10
-#define low_stamina(stamina) (stamina<LOW_STAMINA_THRESHOLD)
-
-#define ATTACK_FACTOR_ADVANTAGE 2
 
 uint8_t fight_stat(uint8_t stat_value, uint8_t stamina)
 {
@@ -290,7 +303,7 @@ uint8_t attack(Character *attacker_ptr, Character* defender_ptr)
             fight_stat(get_stat(defender_ptr,DEXTERITY), get_stat(defender_ptr,STAMINA)))
         {
             blow_hits = fight_stat(get_stat(attacker_ptr,STRENGTH), attacker_stamina);
-            blow(attacker_ptr, defender_ptr, blow_hits);
+            blow(defender_ptr, blow_hits);
         }
         else{
             blow_hits = 0;
@@ -470,11 +483,8 @@ void party_fight(void)
 }
 
 
-Character orcs[MAX_ENEMY_PARTY_SIZE];
-Character humans[MAX_ENEMY_PARTY_SIZE];
 
 // "race",   "class",    "life",  "strength",  "dexterity",  "charisma",  "experience",  "stamina",   "mana",  "gold"};
-
 void set_stats(Character *character_ptr, const char* name, uint8_t race, uint8_t class, 
                uint8_t life, uint8_t strength, uint8_t dexterity,
                uint8_t charisma, uint8_t experience, 
@@ -498,13 +508,14 @@ void set_stats(Character *character_ptr, const char* name, uint8_t race, uint8_t
 void initPlayerParty(void)
 {
     uint8_t i;
-    
+
+    char soldier_name[MAX_NAME_SIZE] = "your soldier ( )";
+     //                                 012345678901234567
+     
     player_party[LEADER] = conan_ptr;
     
     player_party_size = 3;
 
-    char soldier_name[MAX_NAME_SIZE] = "your soldier ( )";
-     //                                 012345678901234567
 
 
     for(i=1;i<player_party_size;++i)
@@ -519,12 +530,13 @@ void initPlayerParty(void)
 void initEnemyParty(void)
 {
     uint8_t i;
+
+    char soldier_name[MAX_NAME_SIZE] = "an enemy orc ( )";
+     //                                 012345678901234567
     
     enemy_party_size = 8;
     enemy_party[LEADER] = ulrik_ptr;
 
-    char soldier_name[MAX_NAME_SIZE] = "an enemy orc ( )";
-     //                                 012345678901234567
 
     for(i=1;i<enemy_party_size;++i)
     {
