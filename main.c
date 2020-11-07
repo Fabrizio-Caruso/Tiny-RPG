@@ -146,10 +146,6 @@ char *class_names[NUM_OF_CLASSES] = {
 };
 
 
-
-
-
-
 struct CharacterStruct 
 {
     uint8_t stat[NUM_OF_STATS];
@@ -190,7 +186,8 @@ Character* ulrik_ptr = &characters[ULRIK];
 
 Character* sheewa_ptr = &characters[SHEEWA];
 
-
+Character* player_ptr; //= player_party[LEADER];
+Character* enemy_ptr; //= enemy_party[LEADER];
 
 char *characters_names[NUM_OF_CHARACTERS] = CHARACTER_NAMES;
 
@@ -329,6 +326,11 @@ uint8_t _attack(Character *attacker_ptr, Character* defender_ptr)
     uint8_t attacker_stamina = get_stat(attacker_ptr,STAMINA);
     uint8_t blow_hits;
     
+    if((attacker_ptr==player_ptr) && (low_stamina(attacker_stamina)))
+    {
+        printf("%s has low stamina\n", get_name(player_ptr));
+    }
+    
     if(attacker_stamina)
     {
         if (ATTACK_FACTOR_ADVANTAGE*fight_stat(get_stat(attacker_ptr,DEXTERITY), attacker_stamina) >
@@ -344,7 +346,10 @@ uint8_t _attack(Character *attacker_ptr, Character* defender_ptr)
     }
     else
     {
-        // printf("%s recovers some stamina\n", get_name(attacker_ptr));
+        if(attacker_ptr==player_ptr)
+        {
+            printf("%s recovers some stamina\n", get_name(attacker_ptr));
+        }
         increase_stamina(attacker_ptr,STAMINA_RECHARGE);
     }
 
@@ -374,7 +379,7 @@ void fight_round(Character* first_ptr, Character* second_ptr, uint8_t verbose)
 {
 
 // TODO: DEBUG
-    verbose = 1;
+// verbose = 1;
 //
     
     attack(first_ptr, second_ptr, verbose);
@@ -451,9 +456,6 @@ void party_fight(void)
     uint8_t i;
     uint8_t round = 0;
     uint8_t verbose;
-
-    Character* player_ptr = player_party[LEADER];
-    Character* enemy_ptr = enemy_party[LEADER];
     
     while (get_life(player_ptr) && get_life(enemy_ptr))
     {
@@ -468,9 +470,6 @@ void party_fight(void)
         
         printf("\nFight!\n");
         getchar();
-        
-        print_stamina_string(player_ptr);
-        print_stamina_string(enemy_ptr);
         
         fight_round(player_party[LEADER],enemy_party[LEADER], VERBOSE_ON);
         
@@ -609,12 +608,16 @@ int main(void)
 {
     
     Character *winner_ptr;
-    
+   
+
     initCharacters();
     
     initPlayerParty();
     initEnemyParty();
-    
+   
+    player_ptr = player_party[LEADER];
+    enemy_ptr = enemy_party[LEADER];
+   
     showAllStatsForAllCharacters();
     
     getchar();
