@@ -125,13 +125,13 @@ void sleep_ms(int milliseconds){ // cross-platform sleep function
     ts.tv_sec = milliseconds / 1000;
     ts.tv_nsec = (milliseconds % 1000) * 1000000;
     nanosleep(&ts, NULL);
-#elif defined(__CBM__)
-    uint16_t i;
-    for(i=1;i<milliseconds;++i){};
-#else
+#elif defined(__GCC__)
     if (milliseconds >= 1000)
       sleep(milliseconds / 1000);
     usleep((milliseconds % 1000) * 1000);
+#else
+    uint16_t i;
+    for(i=1;i<milliseconds;++i){};
 #endif
 }
 
