@@ -135,7 +135,7 @@ void sleep_ms(int milliseconds){ // cross-platform sleep function
 #endif
 }
 
-#define SLEEP(n) sleep_ms(200*n)
+#define SLEEP(n) sleep_ms(10*n)
 
 char *race_names[NUM_OF_RACES] = {
     "human", "orc", "elf"
@@ -160,13 +160,12 @@ typedef struct CharacterStruct Character;
 
 
 Character *player_party[MAX_PLAYER_PARTY_SIZE];
-
-
 uint8_t player_party_size;
 
 Character *enemy_party[MAX_ENEMY_PARTY_SIZE];
-
 uint8_t enemy_party_size;
+
+Character *aux_party[MAX_ENEMY_PARTY_SIZE];
 
 
 Character characters[NUM_OF_CHARACTERS];
@@ -196,12 +195,13 @@ Character* sheewa_ptr = &characters[SHEEWA];
 char *characters_names[NUM_OF_CHARACTERS] = CHARACTER_NAMES;
 
 
-
 uint8_t characters_stats[NUM_OF_CHARACTERS][NUM_OF_STATS] =
 {
     {CONAN_STATS}, {ULRIK_STATS}, {SHEEWA_STATS}
 };
 
+
+typedef void (*ShowCharacterFunction) (const Character *);
 
 
 void initNames(void)
@@ -240,12 +240,14 @@ void initCharacters(void)
 void showFightStats(const Character* character_ptr)
 {
     printf("\n");
-    printf("Name: %s - life: %d - stamina: %d - strength: %d - dexterity: %d\n", 
+    printf("%s - life: %d - stamina: %d - strength: %d - dexterity: %d\n", 
            character_ptr->name, 
            get_life(character_ptr), get_stamina(character_ptr),
            get_strength(character_ptr), get_dexterity(character_ptr));
     
 }
+
+
 
 
 void showAllStats(const Character* character_ptr)
@@ -268,7 +270,7 @@ void showAllStats(const Character* character_ptr)
 }
 
 
-void _showParty(Character **party, uint8_t party_size, void (*showCharacterFunction) (const Character *))
+void _showParty(Character **party, uint8_t party_size, ShowCharacterFunction showCharacterFunction)
 {
     uint8_t i;
     
@@ -280,15 +282,13 @@ void _showParty(Character **party, uint8_t party_size, void (*showCharacterFunct
 }
 
 
-void _showCharacters(void (*showCharacterFunction) (const Character *))
-{
-    printf("\n");
-    
-    printf("Humans: \n");
+void _showCharacters(ShowCharacterFunction showCharacterFunction)
+{    
+    printf("Player party: \n");
     printf("\n");
     _showParty(player_party, player_party_size, showCharacterFunction);
     
-    printf("Orcs: \n");
+    printf("Enemy party: \n");
     printf("\n");
     _showParty(enemy_party, enemy_party_size, showCharacterFunction);
 
@@ -374,7 +374,8 @@ void fight_round(Character* first_ptr, Character* second_ptr, uint8_t verbose)
 {
 
 // TODO: DEBUG
-    // verbose = 1;
+    verbose = 1;
+//
     
     attack(first_ptr, second_ptr, verbose);
     
@@ -526,37 +527,43 @@ void set_stats(Character *character_ptr, const char* name, uint8_t race, uint8_t
     set_gold(character_ptr, gold);
 }
 
-// output: new size 
-uint8_t removeDeadMembers(Character **party_ptr, uint8_t max_size)
+
+uint8_t removeDeadMembers(Character **party_ptr, uint8_t party_size)
 {
-    Character** search_ptr;
-    Character** store_ptr;
-    Character** aux_ptr;
-    uint8_t count = 0;
-    uint8_t new_size = max_size;
+    uint8_t i = 0;
+    uint8_t new_size = 0;
+    Character **search_ptr = party_ptr;
     
-    while(count<=max_size)
+    
+    // printf("DEBUG 1\n");
+    // _showParty(search_ptr, party_size, showFightStats);
+    
+    while(i<party_size)
     {
-        while((count<max_size) && get_life(*(++party_ptr)))
+        if(get_life(*search_ptr))
         {
-            ++count;
+            // printf("(%d) alive\n", i);
+            // showFightStats(*party_ptr);
+            aux_party[new_size] = search_ptr[new_size];
+            ++new_size;
         }
-        // store_ptr points to a dead member
-        store_ptr = party_ptr;
-        while((count<max_size) && !get_life(*(++party_ptr)))
-        {
-            --new_size;
-            ++count;
-        }
-        // search_ptr points to an alive member
-        search_ptr = party_ptr;
-        
-        // switch values (pointers to Character) in party array 
-        *aux_ptr = *store_ptr;
-        *store_ptr = *search_ptr;
-        *search_ptr = *aux_ptr;
+        ++i;
+        ++search_ptr;
     }
+    
+    for(i=0;i<new_size;++i)
+    {
+        *(party_ptr+i) = aux_party[i];
+        // showFightStats(party_ptr[i]);
+    }
+    
+    // printf("new_size: %d\n", new_size);
+    
+    // printf("DEBUG 2\n");
+    // _showParty(party_ptr, party_size, showFightStats);
+    
     return new_size;
+    
 }
 
 
@@ -568,10 +575,7 @@ void initPlayerParty(void)
      //                                 012345678901234567
      
     player_party[LEADER] = conan_ptr;
-    
     player_party_size = 3;
-
-
 
     for(i=1;i<player_party_size;++i)
     {
@@ -588,10 +592,8 @@ void initEnemyParty(void)
 
     char soldier_name[MAX_NAME_SIZE] = "an enemy orc ( )";
      //                                 012345678901234567
-    
-    enemy_party_size = 8;
     enemy_party[LEADER] = ulrik_ptr;
-
+    enemy_party_size = 8;
 
     for(i=1;i<enemy_party_size;++i)
     {
@@ -605,7 +607,7 @@ void initEnemyParty(void)
 
 int main(void)
 {
-
+    
     Character *winner_ptr;
     
     initCharacters();
@@ -634,12 +636,32 @@ int main(void)
     getchar();
     printf("\n\n");
     printf("-------------\n\n");
-    showFightStatsForAllCharacters();
+    // showFightStatsForAllCharacters();
 
     // player_party_size = removeDeadMembers(player_party, player_party_size);
     
-    // enemy_party_size = removeDeadMembers(enemy_party, enemy_party_size);
+    _showParty(enemy_party, enemy_party_size, showFightStats);
+    
+    //enemy_party_size = 
+    enemy_party_size = removeDeadMembers(enemy_party, enemy_party_size);
+    
+    printf("\n\n");
+    
+    // printf("DEBUG\n");
+    // _showParty(aux_party, enemy_party_size, showFightStats);
 
+    printf("After removal\n");
+    
+    // for(int i=0;i<enemy_party_size;++i)
+    // {
+        // enemy_party[i] = aux_party[i];
+    // }
+    
+    _showParty(enemy_party, enemy_party_size, showFightStats);
+    
+    // printf("\n\n");
+    // printf("-------------\n\n");
+    // showFightStatsForAllCharacters();
     return EXIT_SUCCESS;
 }
 
