@@ -267,7 +267,7 @@ void showAllStats(const Character* character_ptr)
 }
 
 
-void _showParty(Character **party, uint8_t party_size, ShowCharacterFunction showCharacterFunction)
+void showParty(Character **party, uint8_t party_size, ShowCharacterFunction showCharacterFunction)
 {
     uint8_t i;
     
@@ -278,30 +278,6 @@ void _showParty(Character **party, uint8_t party_size, ShowCharacterFunction sho
     printf("\n");
 }
 
-
-void _showCharacters(ShowCharacterFunction showCharacterFunction)
-{    
-    printf("Player party: \n");
-    printf("\n");
-    _showParty(player_party, player_party_size, showCharacterFunction);
-    
-    printf("Enemy party: \n");
-    printf("\n");
-    _showParty(enemy_party, enemy_party_size, showCharacterFunction);
-
-}
-
-void showFightStatsForAllCharacters(void)
-{
-    _showCharacters(showFightStats);
-}
-
-void showAllStatsForAllCharacters(void)
-{
-    _showCharacters(showAllStats);
-}
-
-// void showCharacters
 
 void blow(Character *defender_ptr, uint8_t value)
 {
@@ -534,15 +510,10 @@ uint8_t removeDeadMembers(Character **party_ptr, uint8_t party_size)
     Character **search_ptr = party_ptr;
     
     
-    // printf("DEBUG 1\n");
-    // _showParty(search_ptr, party_size, showFightStats);
-    
     while(i<party_size)
     {
         if(get_life(*search_ptr))
         {
-            // printf("(%d) alive\n", i);
-            // showFightStats(*party_ptr);
             aux_party[new_size] = search_ptr[new_size];
             ++new_size;
         }
@@ -553,13 +524,7 @@ uint8_t removeDeadMembers(Character **party_ptr, uint8_t party_size)
     for(i=0;i<new_size;++i)
     {
         *(party_ptr+i) = aux_party[i];
-        // showFightStats(party_ptr[i]);
     }
-    
-    // printf("new_size: %d\n", new_size);
-    
-    // printf("DEBUG 2\n");
-    // _showParty(party_ptr, party_size, showFightStats);
     
     return new_size;
     
@@ -618,7 +583,13 @@ int main(void)
     player_ptr = player_party[LEADER];
     enemy_ptr = enemy_party[LEADER];
    
-    showAllStatsForAllCharacters();
+    // showAllStatsForAllCharacters();
+    showParty(player_party, player_party_size, showAllStats);
+    
+    getchar();
+    
+    showParty(enemy_party, enemy_party_size, showAllStats);
+
     
     getchar();
     
@@ -643,7 +614,7 @@ int main(void)
 
     // player_party_size = removeDeadMembers(player_party, player_party_size);
     
-    _showParty(enemy_party, enemy_party_size, showFightStats);
+    showParty(enemy_party, enemy_party_size, showFightStats);
     
     //enemy_party_size = 
     enemy_party_size = removeDeadMembers(enemy_party, enemy_party_size);
@@ -651,7 +622,7 @@ int main(void)
     printf("\n\n");
     
     // printf("DEBUG\n");
-    // _showParty(aux_party, enemy_party_size, showFightStats);
+    // showParty(aux_party, enemy_party_size, showFightStats);
 
     printf("After removal\n");
     
@@ -660,7 +631,7 @@ int main(void)
         // enemy_party[i] = aux_party[i];
     // }
     
-    _showParty(enemy_party, enemy_party_size, showFightStats);
+    showParty(enemy_party, enemy_party_size, showFightStats);
     
     // printf("\n\n");
     // printf("-------------\n\n");
