@@ -294,6 +294,8 @@ void blow(Character *defender_ptr, uint8_t value)
 
 uint8_t fight_stat(uint8_t stat_value, uint8_t stamina)
 {
+    // uint8_t r = rand()&3;
+    // printf("\n  r = %d\n", r);
     return stat_value/(1+(rand()&3))/(1+low_stamina(stamina));
 }
 
