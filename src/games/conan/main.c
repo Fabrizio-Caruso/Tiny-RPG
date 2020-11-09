@@ -237,7 +237,7 @@ void initCharacters(void)
 void showFightStats(const Character* character_ptr)
 {
     printf("\n");
-    printf("%s - life: %d - stamina: %d - strength: %d - dexterity: %d\n", 
+    printf("%s - life: %u - stamina: %u - strength: %u - dexterity: %u\n", 
            character_ptr->name, 
            get_life(character_ptr), get_stamina(character_ptr),
            get_strength(character_ptr), get_dexterity(character_ptr));
@@ -295,14 +295,14 @@ void blow(Character *defender_ptr, uint8_t value)
 uint8_t fight_stat(uint8_t stat_value, uint8_t stamina)
 {
     // uint8_t r = rand()&3;
-    // printf("\n  r = %d\n", r);
+    // printf("\n  r = %u\n", r);
     return stat_value/(1+(rand()&3))/(1+low_stamina(stamina));
 }
 
 uint8_t _attack(Character *attacker_ptr, Character* defender_ptr)
 {
     uint8_t attacker_stamina = get_stat(attacker_ptr,STAMINA);
-    uint8_t blow_hits;
+    uint8_t blow_hits = 0;
     
     if((attacker_ptr==player_ptr) && (low_stamina(attacker_stamina)))
     {
@@ -316,9 +316,6 @@ uint8_t _attack(Character *attacker_ptr, Character* defender_ptr)
         {
             blow_hits = fight_stat(get_stat(attacker_ptr,STRENGTH), attacker_stamina);
             blow(defender_ptr, blow_hits);
-        }
-        else{
-            blow_hits = 0;
         }
         decrease_stamina(attacker_ptr,1);
     }
@@ -342,7 +339,7 @@ void attack(Character *attacker, Character *defender, uint8_t verbose)
     {
         if(attack_force)
         {
-            printf("%s hits %s with force=%d\n", attacker->name, defender->name, attack_force);
+            printf("%s hits %s with force=%u\n", attacker->name, defender->name, attack_force);
         }
         else
         {
@@ -438,7 +435,7 @@ void party_fight(void)
     while (get_life(player_ptr) && get_life(enemy_ptr))
     {
         printf("\n\n\n------------------\n");
-        printf("round %d\n", ++round);
+        printf("round %u\n", ++round);
         printf("------------------\n");
         getchar();
         showFightStats(player_ptr);
