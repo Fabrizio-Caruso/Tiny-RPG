@@ -186,8 +186,8 @@ Character* ulrik_ptr = &characters[ULRIK];
 
 Character* sheewa_ptr = &characters[SHEEWA];
 
-Character* player_ptr; //= player_party[LEADER];
-Character* enemy_ptr; //= enemy_party[LEADER];
+Character* player_ptr;
+Character* enemy_ptr;
 
 char *characters_names[NUM_OF_CHARACTERS] = CHARACTER_NAMES;
 
@@ -243,8 +243,6 @@ void showFightStats(const Character* character_ptr)
            get_strength(character_ptr), get_dexterity(character_ptr));
     
 }
-
-
 
 
 void showAllStats(const Character* character_ptr)
@@ -352,7 +350,7 @@ void try_attack(Character *attacker_ptr, Character *defender_ptr, uint8_t verbos
     }
     else
     {
-        if(attacker_ptr==player_ptr)
+        if((attacker_ptr==player_ptr)&&(attacker_ptr==enemy_ptr))
         {
             printf("%s recovers some stamina\n", get_name(attacker_ptr));
         }
@@ -361,37 +359,33 @@ void try_attack(Character *attacker_ptr, Character *defender_ptr, uint8_t verbos
 }
 
 
+void fight_turn(Character* attacker_ptr, Character* defender_ptr, uint8_t verbose)
+{
+    try_attack(attacker_ptr, defender_ptr, verbose);
+
+    if(!get_life(defender_ptr))
+    {
+        if(!verbose)
+        {
+            printf("\n");
+        }
+        printf("%s kills %s!\n\n", attacker_ptr->name, defender_ptr->name);
+        increase_experience(attacker_ptr,1+get_experience(defender_ptr)/20);
+    }
+    
+
+}
+
 void fight_round(Character* first_ptr, Character* second_ptr, uint8_t verbose)
 {
 
 // TODO: DEBUG
 // verbose = 1;
 //
-    
-    try_attack(first_ptr, second_ptr, verbose);
-    
-    if(get_life(second_ptr)) // second_ptr is alive
+    fight_turn(first_ptr, second_ptr, verbose);
+    if(get_life(second_ptr))
     {
-        try_attack(second_ptr, first_ptr, verbose);
-        if(!get_life(first_ptr)) // first_ptr is not dead
-        {
-            if(!verbose)
-            {
-                printf("\n");
-            }
-            printf("%s kills %s!\n\n", second_ptr->name, first_ptr->name);
-            increase_experience(second_ptr,1+get_experience(first_ptr)/20);
-            SLEEP(1);
-        }
-    }
-    else // second_ptr is dead
-    {
-        if(!verbose)
-        {
-            printf("\n");
-        }
-        printf("%s kills %s!\n\n", first_ptr->name, second_ptr->name);
-        increase_experience(first_ptr,1+get_experience(second_ptr)/20);
+        fight_turn(second_ptr, first_ptr, verbose);
     }
     if(verbose)
     {
@@ -447,7 +441,7 @@ void party_fight(void)
     {
         printf("\n\n\n------------------\n");
         printf("round %u\n", ++round);
-        printf("------------------\n");
+        printf(      "------------------\n");
         getchar();
         showFightStats(player_ptr);
         getchar();
@@ -459,7 +453,7 @@ void party_fight(void)
         
         fight_round(player_party[LEADER],enemy_party[LEADER], VERBOSE_ON);
         
-        printf("----------------------------------\n");
+        // printf("----------------------------------\n");
         
         if((get_life(player_ptr)) && (get_life(enemy_ptr)))
         {
@@ -578,28 +572,7 @@ void initEnemyParty(void)
 
 }
 
-int main(void)
-{
-    
-    Character player;
-    player_ptr = &player;
-    
-    set_name(player_ptr, "Conan");
-    set_life(player_ptr, 42);
-    set_strength(player_ptr,43);
-    set_dexterity(player_ptr, 44);
-    set_stamina(player_ptr,45);
-    
-    while(1)
-    {
-        showFightStats(player_ptr);
-        getchar();
-    }
-    
-    return 0;
-}
 
-/*
 int main(void)
 {
     
@@ -661,6 +634,6 @@ int main(void)
 
     return EXIT_SUCCESS;
 }
-*/
+
 
 
