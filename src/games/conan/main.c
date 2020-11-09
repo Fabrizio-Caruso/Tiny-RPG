@@ -294,15 +294,49 @@ void blow(Character *defender_ptr, uint8_t value)
 
 uint8_t fight_stat(uint8_t stat_value, uint8_t stamina)
 {
-    // uint8_t r = rand()&3;
-    // printf("\n  r = %u\n", r);
     return stat_value/(1+(rand()&3))/(1+low_stamina(stamina));
 }
+
 
 uint8_t _attack(Character *attacker_ptr, Character* defender_ptr)
 {
     uint8_t attacker_stamina = get_stat(attacker_ptr,STAMINA);
     uint8_t blow_hits = 0;
+    
+    if (ATTACK_FACTOR_ADVANTAGE*fight_stat(get_stat(attacker_ptr,DEXTERITY), attacker_stamina) >
+        fight_stat(get_stat(defender_ptr,DEXTERITY), get_stat(defender_ptr,STAMINA)))
+    {
+        blow_hits = fight_stat(get_stat(attacker_ptr,STRENGTH), attacker_stamina);
+        blow(defender_ptr, blow_hits);
+    }
+    decrease_stamina(attacker_ptr,1);
+
+    return blow_hits;
+}
+
+
+void attack(Character *attacker_ptr, Character *defender_ptr, uint8_t verbose)
+{
+    uint8_t attack_force = _attack(attacker_ptr, defender_ptr);
+    
+    if(verbose)
+    {
+        if(attack_force)
+        {
+            printf("%s hits %s with force=%u\n", attacker_ptr->name, defender_ptr->name, attack_force);
+        }
+        else
+        {
+            printf("%s attacks but %s fends off the attack\n", attacker_ptr->name, defender_ptr->name);
+        }
+        SLEEP(1);
+    }
+}
+
+
+void try_attack(Character *attacker_ptr, Character *defender_ptr, uint8_t verbose)
+{
+    uint8_t attacker_stamina = get_stat(attacker_ptr,STAMINA);
     
     if((attacker_ptr==player_ptr) && (low_stamina(attacker_stamina)))
     {
@@ -311,13 +345,7 @@ uint8_t _attack(Character *attacker_ptr, Character* defender_ptr)
     
     if(attacker_stamina)
     {
-        if (ATTACK_FACTOR_ADVANTAGE*fight_stat(get_stat(attacker_ptr,DEXTERITY), attacker_stamina) >
-            fight_stat(get_stat(defender_ptr,DEXTERITY), get_stat(defender_ptr,STAMINA)))
-        {
-            blow_hits = fight_stat(get_stat(attacker_ptr,STRENGTH), attacker_stamina);
-            blow(defender_ptr, blow_hits);
-        }
-        decrease_stamina(attacker_ptr,1);
+        attack(attacker_ptr, defender_ptr, verbose);
     }
     else
     {
@@ -326,26 +354,6 @@ uint8_t _attack(Character *attacker_ptr, Character* defender_ptr)
             printf("%s recovers some stamina\n", get_name(attacker_ptr));
         }
         increase_stamina(attacker_ptr,STAMINA_RECHARGE);
-    }
-
-    return blow_hits;
-}
-
-void attack(Character *attacker, Character *defender, uint8_t verbose)
-{
-    uint8_t attack_force = _attack(attacker, defender);
-    
-    if(verbose)
-    {
-        if(attack_force)
-        {
-            printf("%s hits %s with force=%u\n", attacker->name, defender->name, attack_force);
-        }
-        else
-        {
-            printf("%s attacks but %s fends off the attack\n", attacker->name, defender->name);
-        }
-        SLEEP(1);
     }
 }
 
@@ -357,12 +365,12 @@ void fight_round(Character* first_ptr, Character* second_ptr, uint8_t verbose)
 // verbose = 1;
 //
     
-    attack(first_ptr, second_ptr, verbose);
+    try_attack(first_ptr, second_ptr, verbose);
     
-    if(get_life(second_ptr))
+    if(get_life(second_ptr)) // second_ptr is alive
     {
-        attack(second_ptr, first_ptr, verbose);
-        if(!get_life(first_ptr)) // first_ptr is dead
+        try_attack(second_ptr, first_ptr, verbose);
+        if(!get_life(first_ptr)) // first_ptr is not dead
         {
             if(!verbose)
             {
