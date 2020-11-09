@@ -498,6 +498,7 @@ c128_z80_80col: $(ASSETS_PATH)/z88dk_sprites_definitions.h
 
 
 #################################################################
+# 	-pragma-define:REGISTER_SP=-1 
 
 cpc: 
 	$(Z88DK_PATH)$(MYZ88DK) +cpc $(SCCZ80_OPTS) $(INCLUDE_OPTS) -DANIMATE_PLAYER -vn  -clib=ansi \
@@ -506,8 +507,7 @@ cpc:
 	-DCPCRSLIB \
 	-DZ88DK_JOYSTICK \
 	-DSLOW_DOWN=900 \
-	-pragma-define:REGISTER_SP=-1 \
-	-lndos -create-app -o 	$(BUILD_PATH)/FULL_X$(GAME_NAME)_$@.prg \
+	-lndos -subtype=wav -create-app -o 	$(BUILD_PATH)/FULL_X$(GAME_NAME)_$@.prg \
 	-DCPCRSLIB_GRAPHICS \
 	$(FULL_FILES)
 	$(TOOLS_PATH)/z88dk/cpc/2cdt.exe -n -r cross_$(GAME_NAME) $(BUILD_PATH)/FULL_X$(GAME_NAME)_$@.cpc  $(BUILD_PATH)/FULL_X$(GAME_NAME)_$@.cdt
@@ -529,6 +529,13 @@ cpc_hello:
 	-D__CPC__ \
 	-lndos -create-app -o 	$(BUILD_PATH)/X$(GAME_NAME)_$@.prg \
 	$(TEST_PATH)/hello.c
+
+cpc_test:
+	$(Z88DK_PATH)$(MYZ88DK) +cpc -subtype=wav  \
+	-D__CPC__ \
+	-lndos -create-app -o 	$(BUILD_PATH)/X$(GAME_NAME)_$@.prg \
+	$(TEST_PATH)/test.c
+
 
 
 cpc_hello_1:

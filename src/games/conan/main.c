@@ -274,6 +274,9 @@ void showParty(Character **party, uint8_t party_size, ShowCharacterFunction show
     for(i=0;i<party_size;++i)
     {
         showCharacterFunction(party[i]);
+        
+        getchar();
+
     }
     printf("\n");
 }
@@ -575,7 +578,28 @@ void initEnemyParty(void)
 
 }
 
+int main(void)
+{
+    
+    Character player;
+    player_ptr = &player;
+    
+    set_name(player_ptr, "Conan");
+    set_life(player_ptr, 42);
+    set_strength(player_ptr,43);
+    set_dexterity(player_ptr, 44);
+    set_stamina(player_ptr,45);
+    
+    while(1)
+    {
+        showFightStats(player_ptr);
+        getchar();
+    }
+    
+    return 0;
+}
 
+/*
 int main(void)
 {
     
@@ -591,11 +615,11 @@ int main(void)
     enemy_ptr = enemy_party[LEADER];
    
     // showAllStatsForAllCharacters();
-    showParty(player_party, player_party_size, showAllStats);
+    showParty(player_party, player_party_size, showFightStats);
     
     getchar();
     
-    showParty(enemy_party, enemy_party_size, showAllStats);
+    showParty(enemy_party, enemy_party_size, showFightStats);
 
     
     getchar();
@@ -617,9 +641,7 @@ int main(void)
     getchar();
     printf("\n\n");
     printf("-------------\n\n");
-    // showFightStatsForAllCharacters();
 
-    // player_party_size = removeDeadMembers(player_party, player_party_size);
     
     showParty(enemy_party, enemy_party_size, showFightStats);
     
@@ -633,16 +655,12 @@ int main(void)
 
     printf("After removal\n");
     
-    // for(int i=0;i<enemy_party_size;++i)
-    // {
-        // enemy_party[i] = aux_party[i];
-    // }
     
     showParty(enemy_party, enemy_party_size, showFightStats);
     
-    // printf("\n\n");
-    // printf("-------------\n\n");
-    // showFightStatsForAllCharacters();
+
     return EXIT_SUCCESS;
 }
+*/
+
 
