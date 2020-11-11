@@ -57,31 +57,31 @@
 #define MAX_ELFS_SIZE 8
 
 
-#define set_stat(_character_ptr, _stat_index, _value)  (_character_ptr)->stat[_stat_index] =  _value
+#define set_base_base_stat(_character_ptr, _stat_index, _value)  (_character_ptr)->stat[_stat_index] =  _value
 
-#define set_race(_character_ptr, _value)          (_character_ptr)->stat[RACE] =  _value
-#define set_class(_character_ptr, _value)         (_character_ptr)->stat[CLASS] =  _value
-#define set_life(_character_ptr, _value)          (_character_ptr)->stat[LIFE] =  _value
-#define set_strength(_character_ptr, _value)      (_character_ptr)->stat[STRENGTH] =  _value
-#define set_dexterity(_character_ptr, _value)     (_character_ptr)->stat[DEXTERITY] =  _value
-#define set_charisma(_character_ptr, _value)      (_character_ptr)->stat[CHARISMA] =  _value
-#define set_experience(_character_ptr, _value)    (_character_ptr)->stat[EXPERIENCE] =  _value
-#define set_level(_character_ptr, _value)         (_character_ptr)->stat[LEVEL] =  _value
-#define set_stamina(_character_ptr, _value)       (_character_ptr)->stat[STAMINA] =  _value
-#define set_mana(_character_ptr, _value)          (_character_ptr)->stat[MANA] =  _value
-#define set_gold(_character_ptr, _value)          (_character_ptr)->stat[GOLD] =  _value
+#define set_base_race(_character_ptr, _value)          (_character_ptr)->stat[RACE] =  _value
+#define set_base_class(_character_ptr, _value)         (_character_ptr)->stat[CLASS] =  _value
+#define set_base_life(_character_ptr, _value)          (_character_ptr)->stat[LIFE] =  _value
+#define set_base_strength(_character_ptr, _value)      (_character_ptr)->stat[STRENGTH] =  _value
+#define set_base_dexterity(_character_ptr, _value)     (_character_ptr)->stat[DEXTERITY] =  _value
+#define set_base_charisma(_character_ptr, _value)      (_character_ptr)->stat[CHARISMA] =  _value
+#define set_base_experience(_character_ptr, _value)    (_character_ptr)->stat[EXPERIENCE] =  _value
+#define set_base_level(_character_ptr, _value)         (_character_ptr)->stat[LEVEL] =  _value
+#define set_base_stamina(_character_ptr, _value)       (_character_ptr)->stat[STAMINA] =  _value
+#define set_base_mana(_character_ptr, _value)          (_character_ptr)->stat[MANA] =  _value
+#define set_base_gold(_character_ptr, _value)          (_character_ptr)->stat[GOLD] =  _value
 
-#define set_shield(_character_ptr, _value)        (_character_ptr)->stat[SHIELD] =  _value
-#define set_breastplate(_character_ptr, _value)   (_character_ptr)->stat[BREASTPLATE] =  _value
-#define set_helmet(_character_ptr, _value)        (_character_ptr)->stat[HELMET] =  _value
-#define set_sword(_character_ptr, _value)         (_character_ptr)->stat[SWORD] =  _value
-#define set_boots(_character_ptr, _value)         (_character_ptr)->stat[BOOTS] =  _value
-#define set_medallion(_character_ptr, _value)     (_character_ptr)->stat[MEDALLION] =  _value
+#define set_base_shield(_character_ptr, _value)        (_character_ptr)->stat[SHIELD] =  _value
+#define set_base_breastplate(_character_ptr, _value)   (_character_ptr)->stat[BREASTPLATE] =  _value
+#define set_base_helmet(_character_ptr, _value)        (_character_ptr)->stat[HELMET] =  _value
+#define set_base_sword(_character_ptr, _value)         (_character_ptr)->stat[SWORD] =  _value
+#define set_base_boots(_character_ptr, _value)         (_character_ptr)->stat[BOOTS] =  _value
+#define set_base_medallion(_character_ptr, _value)     (_character_ptr)->stat[MEDALLION] =  _value
 
-#define set_potions(_character_ptr, _value)       (_character_ptr)->stat[POTIONS] =  _value
+#define set_base_potions(_character_ptr, _value)       (_character_ptr)->stat[POTIONS] =  _value
 
 
-#define set_name(_character_ptr, _name)  strcpy((_character_ptr)->name,_name)
+#define set_base_name(_character_ptr, _name)  strcpy((_character_ptr)->name,_name)
 
 #define get_base_stat(_character_ptr, _stat_index) (_character_ptr)->stat[_stat_index]
 
@@ -95,13 +95,13 @@
 #define get_base_experience(_character_ptr) get_base_stat(_character_ptr,EXPERIENCE)
 
 
-#define increase_stat(_character_ptr, _stat_index, _value)  ((_character_ptr)->stat[_stat_index])+=_value;
+#define increase_base_stat(_character_ptr, _stat_index, _value)  ((_character_ptr)->stat[_stat_index])+=_value;
 
-#define decrease_stat(_character_ptr, _stat_index, _value)  ((_character_ptr)->stat[_stat_index])-=_value;
+#define decrease_base_stat(_character_ptr, _stat_index, _value)  ((_character_ptr)->stat[_stat_index])-=_value;
 
-#define increase_stamina(_character_ptr, _value) increase_stat(_character_ptr, STAMINA, _value)
-#define increase_experience(_character_ptr, _value) increase_stat(_character_ptr, EXPERIENCE, _value)
-#define decrease_stamina(_character_ptr, _value) decrease_stat(_character_ptr, STAMINA, _value)
+#define increase_base_stamina(_character_ptr, _value) increase_base_stat(_character_ptr, STAMINA, _value)
+#define increase_base_experience(_character_ptr, _value) increase_base_stat(_character_ptr, EXPERIENCE, _value)
+#define decrease_base_stamina(_character_ptr, _value) decrease_base_stat(_character_ptr, STAMINA, _value)
 
 
 #define CHARACTER_NAMES \
@@ -247,7 +247,7 @@ void initFeatures(void)
     {
         for(stat_index=0;stat_index<NUM_OF_STATS;++stat_index)
         {
-            set_stat(&characters[char_index], stat_index, characters_stats[char_index][stat_index]);
+            set_base_base_stat(&characters[char_index], stat_index, characters_stats[char_index][stat_index]);
         }
     }
 }
@@ -314,7 +314,7 @@ void blow(Character *defender_ptr, uint8_t value)
     }
     else
     {
-        set_stat(defender_ptr,LIFE,0);
+        set_base_base_stat(defender_ptr,LIFE,0);
     }
 }
 
@@ -336,7 +336,7 @@ uint8_t _attack(Character *attacker_ptr, Character* defender_ptr)
         blow_hits = fight_stat(get_base_strength(attacker_ptr), attacker_stamina);
         blow(defender_ptr, blow_hits);
     }
-    decrease_stamina(attacker_ptr,1);
+    decrease_base_stamina(attacker_ptr,1);
 
     return blow_hits;
 }
@@ -380,7 +380,7 @@ void try_attack(Character *attacker_ptr, Character *defender_ptr, uint8_t verbos
         {
             printf("%s recovers some stamina\n", get_base_name(attacker_ptr));
         }
-        increase_stamina(attacker_ptr,STAMINA_RECHARGE);
+        increase_base_stamina(attacker_ptr,STAMINA_RECHARGE);
     }
 }
 
@@ -396,7 +396,7 @@ void fight_turn(Character* attacker_ptr, Character* defender_ptr, uint8_t verbos
             printf("\n");
         }
         printf("%s kills %s!\n\n", attacker_ptr->name, defender_ptr->name);
-        increase_experience(attacker_ptr,1+get_base_experience(defender_ptr)/20);
+        increase_base_experience(attacker_ptr,1+get_base_experience(defender_ptr)/20);
     }
     
 
@@ -512,7 +512,7 @@ void party_fight(void)
 
 
 // "race",   "class",    "life",  "strength",  "dexterity",  "charisma",  "experience",  "stamina",   "mana",  "gold"};
-void set_stats(Character *character_ptr, const char* name, uint8_t race, uint8_t class, 
+void set_base_stats(Character *character_ptr, const char* name, uint8_t race, uint8_t class, 
                uint8_t life, uint8_t strength, uint8_t dexterity,
                uint8_t charisma, uint8_t experience, uint8_t level,
                uint8_t stamina, uint8_t mana, uint8_t gold,
@@ -520,30 +520,30 @@ void set_stats(Character *character_ptr, const char* name, uint8_t race, uint8_t
                uint8_t sword, uint8_t boots, uint8_t medallion,
                uint8_t potions)
 {
-    set_name(character_ptr, name);
-    set_race(character_ptr, race);
-    set_class(character_ptr, class);
+    set_base_name(character_ptr, name);
+    set_base_race(character_ptr, race);
+    set_base_class(character_ptr, class);
     
-    set_life(character_ptr, life);
-    set_strength(character_ptr, strength);
-    set_dexterity(character_ptr, dexterity);
-    set_charisma(character_ptr, charisma);
-    set_experience(character_ptr, experience);
-    set_level(character_ptr, level);
+    set_base_life(character_ptr, life);
+    set_base_strength(character_ptr, strength);
+    set_base_dexterity(character_ptr, dexterity);
+    set_base_charisma(character_ptr, charisma);
+    set_base_experience(character_ptr, experience);
+    set_base_level(character_ptr, level);
     
-    set_stamina(character_ptr, stamina);
-    set_mana(character_ptr, mana);
-    set_gold(character_ptr, gold);
+    set_base_stamina(character_ptr, stamina);
+    set_base_mana(character_ptr, mana);
+    set_base_gold(character_ptr, gold);
     
-    set_shield(character_ptr, shield);
-    set_breastplate(character_ptr, breastplate);
-    set_helmet(character_ptr, helmet);
+    set_base_shield(character_ptr, shield);
+    set_base_breastplate(character_ptr, breastplate);
+    set_base_helmet(character_ptr, helmet);
     
-    set_sword(character_ptr, sword);
-    set_boots(character_ptr, boots);
-    set_medallion(character_ptr, medallion);
+    set_base_sword(character_ptr, sword);
+    set_base_boots(character_ptr, boots);
+    set_base_medallion(character_ptr, medallion);
 
-    set_potions(character_ptr, potions);
+    set_base_potions(character_ptr, potions);
 }
 
 
@@ -588,7 +588,7 @@ void initPlayerParty(void)
     for(i=1;i<player_party_size;++i)
     {
         soldier_name[14] = '0'+i; //soldier_name
-        set_stats(&humans[i-1], soldier_name, HUMAN_SOLDIER_STATS);
+        set_base_stats(&humans[i-1], soldier_name, HUMAN_SOLDIER_STATS);
         player_party[i] = &humans[i-1];
     }
     
@@ -606,7 +606,7 @@ void initEnemyParty(void)
     for(i=1;i<enemy_party_size;++i)
     {
         soldier_name[14] = '0'+i; //soldier_name
-        set_stats(&orcs[i-1],soldier_name, ORC_SOLDIER_STATS);
+        set_base_stats(&orcs[i-1],soldier_name, ORC_SOLDIER_STATS);
         enemy_party[i] = &orcs[i-1];
     }
 
