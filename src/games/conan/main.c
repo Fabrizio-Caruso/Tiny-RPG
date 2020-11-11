@@ -93,8 +93,23 @@
 #define get_base_life(_character_ptr) get_base_stat(_character_ptr,LIFE)
 #define get_base_strength(_character_ptr) get_base_stat(_character_ptr,STRENGTH)
 #define get_base_dexterity(_character_ptr) get_base_stat(_character_ptr,DEXTERITY)
+#define get_base_charisma(_character_ptr) get_base_stat(_character_ptr,CHARISMA)
 #define get_base_stamina(_character_ptr) get_base_stat(_character_ptr,STAMINA)
 #define get_base_experience(_character_ptr) get_base_stat(_character_ptr,EXPERIENCE)
+
+
+#define get_name(_character_ptr) get_base_name(_character_ptr)
+#define get_race(_character_ptr) get_base_race(_character_ptr)
+
+#define get_strength(_character_ptr) get_stat(_character_ptr,STRENGTH)
+#define get_dexterity(_character_ptr) get_stat(_character_ptr,DEXTERITY)
+
+#define get_class(_character_ptr) get_stat(_character_ptr,CLASS)
+#define get_life(_character_ptr) get_stat(_character_ptr,LIFE)
+#define get_charisma(_character_ptr) get_stat(_character_ptr,CHARISMA)
+#define get_stamina(_character_ptr) get_stat(_character_ptr,STAMINA)
+#define get_experience(_character_ptr) get_stat(_character_ptr,EXPERIENCE)
+
 
 
 #define increase_base_stat(_character_ptr, _stat_index, _value)  ((_character_ptr)->stat[_stat_index])+=_value;
@@ -117,9 +132,18 @@
 #define ULRIK    1
 #define SHEEWA   2
 
+
+#define STAMINA_RECHARGE 10
+#define LOW_STAMINA_THRESHOLD 10
+#define low_stamina(stamina) (stamina<LOW_STAMINA_THRESHOLD)
+
+#define ATTACK_FACTOR_ADVANTAGE 2
+
+
 char *stats_names[NUM_OF_STATS] = {
 //                  RACE      CLASS       LIFE      STRENGTH     DEXTERITY     CHARSIMA      EXPERIENCE      LEVEL    STAMINA      MANA     GOLD
-                   "race",   "class",    "life",   "strength",  "dexterity",  "charisma",  "experience",    "level"   "stamina",   "mana",  "gold"};
+                   "race",   "class",    "life",   "strength",  "dexterity",  "charisma",  "experience",    "level",   "stamina",   "mana",  "gold",
+                   "shield","breastplate","helmet","sword","boots","medallion","potions"};
 #define CONAN_STATS       \
                     HUMAN,    NONE,        100,       30,           55,           10,            0,           1,           5,         10,       10,0,0,0,0,0,0,0
 #define ULRIK_STATS       \
@@ -145,6 +169,21 @@ char *stats_names[NUM_OF_STATS] = {
 #include <unistd.h> // for usleep
 #endif
 
+
+
+struct CharacterStruct 
+{
+    uint8_t stat[NUM_OF_STATS];
+    
+    char name[MAX_NAME_SIZE];
+    
+    struct CharacterStruct* leader_ptr;
+};
+typedef struct CharacterStruct Character;
+
+
+
+
 void sleep_ms(int milliseconds){ // cross-platform sleep function
 #ifdef WIN32
     Sleep(milliseconds);
@@ -163,6 +202,36 @@ void sleep_ms(int milliseconds){ // cross-platform sleep function
 #endif
 }
 
+
+
+
+uint8_t get_leader_charisma(const Character* character_ptr)
+{
+    if(character_ptr->leader_ptr)
+    {
+        return get_base_charisma(character_ptr->leader_ptr);
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+
+
+uint8_t get_stat(const Character* character_ptr, uint8_t stat_index)
+{
+    uint8_t res = get_base_stat(character_ptr,stat_index);
+    
+    if((stat_index==STRENGTH)||(stat_index==DEXTERITY))
+    {
+        res+= get_leader_charisma(character_ptr)/10;
+    }
+    return res;
+}
+
+
+
 #define SLEEP(n) sleep_ms(10*n)
 
 char *race_names[NUM_OF_RACES] = {
@@ -172,17 +241,6 @@ char *race_names[NUM_OF_RACES] = {
 char *class_names[NUM_OF_CLASSES] = {
     "none", "warrior", "wizard", "bard", "assassin"
 };
-
-
-struct CharacterStruct 
-{
-    uint8_t stat[NUM_OF_STATS];
-    
-    char name[MAX_NAME_SIZE];
-    
-    struct CharacterStruct* leader_ptr;
-};
-typedef struct CharacterStruct Character;
 
 
 Character *player_party[MAX_PLAYER_PARTY_SIZE];
@@ -195,13 +253,6 @@ Character *aux_party[MAX_ENEMY_PARTY_SIZE];
 
 
 Character characters[NUM_OF_CHARACTERS];
-
-
-#define STAMINA_RECHARGE 10
-#define LOW_STAMINA_THRESHOLD 10
-#define low_stamina(stamina) (stamina<LOW_STAMINA_THRESHOLD)
-
-#define ATTACK_FACTOR_ADVANTAGE 2
 
 
 Character orcs[MAX_ORCS_SIZE];
@@ -270,7 +321,7 @@ void showFightStats(const Character* character_ptr)
     printf("%s - life: %u - stamina: %u - strength: %u - dexterity: %u\n", 
            character_ptr->name, 
            get_base_life(character_ptr), get_base_stamina(character_ptr),
-           get_base_strength(character_ptr), get_base_dexterity(character_ptr));
+           get_strength(character_ptr), get_dexterity(character_ptr));
     
 }
 
@@ -289,7 +340,7 @@ void showAllStats(const Character* character_ptr)
     
     for(stat_index=NUM_OF_STATIC_STATS; stat_index<NUM_OF_STATS; ++stat_index)
     {
-        printf("%s: %u\n", stats_names[stat_index], get_base_stat(character_ptr,stat_index));
+        printf("%s: %u\n", stats_names[stat_index], get_stat(character_ptr,stat_index));
     }
     printf("\n");
 }
@@ -642,7 +693,7 @@ int main(void)
     enemy_ptr = enemy_party[LEADER];
    
     // showAllStatsForAllCharacters();
-    showParty(player_party, player_party_size, showFightStats);
+    showParty(player_party, player_party_size, showAllStats);
     
     getchar();
     
