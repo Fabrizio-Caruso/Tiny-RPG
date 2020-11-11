@@ -57,7 +57,9 @@
 #define MAX_ELFS_SIZE 8
 
 
-#define set_base_base_stat(_character_ptr, _stat_index, _value)  (_character_ptr)->stat[_stat_index] =  _value
+#define set_base_stat(_character_ptr, _stat_index, _value)  (_character_ptr)->stat[_stat_index] =  _value
+
+#define set_leader(_character_ptr,_leader_ptr) (_character_ptr)->leader_ptr = _leader_ptr
 
 #define set_base_race(_character_ptr, _value)          (_character_ptr)->stat[RACE] =  _value
 #define set_base_class(_character_ptr, _value)         (_character_ptr)->stat[CLASS] =  _value
@@ -177,6 +179,8 @@ struct CharacterStruct
     uint8_t stat[NUM_OF_STATS];
     
     char name[MAX_NAME_SIZE];
+    
+    struct CharacterStruct* leader_ptr;
 };
 typedef struct CharacterStruct Character;
 
@@ -247,7 +251,7 @@ void initFeatures(void)
     {
         for(stat_index=0;stat_index<NUM_OF_STATS;++stat_index)
         {
-            set_base_base_stat(&characters[char_index], stat_index, characters_stats[char_index][stat_index]);
+            set_base_stat(&characters[char_index], stat_index, characters_stats[char_index][stat_index]);
         }
     }
 }
@@ -314,7 +318,7 @@ void blow(Character *defender_ptr, uint8_t value)
     }
     else
     {
-        set_base_base_stat(defender_ptr,LIFE,0);
+        set_base_stat(defender_ptr,LIFE,0);
     }
 }
 
@@ -325,9 +329,8 @@ uint8_t fight_stat(uint8_t stat_value, uint8_t stamina)
 }
 
 
-uint8_t _attack(Character *attacker_ptr, Character* defender_ptr)
+uint8_t _attack(Character *attacker_ptr, Character* defender_ptr, uint8_t attacker_stamina)
 {
-    uint8_t attacker_stamina = get_base_stamina(attacker_ptr);
     uint8_t blow_hits = 0;
     
     if (ATTACK_FACTOR_ADVANTAGE*fight_stat(get_base_dexterity(attacker_ptr), attacker_stamina) >
@@ -342,9 +345,9 @@ uint8_t _attack(Character *attacker_ptr, Character* defender_ptr)
 }
 
 
-void attack(Character *attacker_ptr, Character *defender_ptr, uint8_t verbose)
+void attack(Character *attacker_ptr, Character *defender_ptr, uint8_t attacker_stamina, uint8_t verbose)
 {
-    uint8_t attack_force = _attack(attacker_ptr, defender_ptr);
+    uint8_t attack_force = _attack(attacker_ptr, defender_ptr, attacker_stamina);
     
     if(verbose)
     {
@@ -372,7 +375,7 @@ void try_attack(Character *attacker_ptr, Character *defender_ptr, uint8_t verbos
     
     if(attacker_stamina)
     {
-        attack(attacker_ptr, defender_ptr, verbose);
+        attack(attacker_ptr, defender_ptr, attacker_stamina, verbose);
     }
     else
     {
@@ -512,7 +515,8 @@ void party_fight(void)
 
 
 // "race",   "class",    "life",  "strength",  "dexterity",  "charisma",  "experience",  "stamina",   "mana",  "gold"};
-void set_base_stats(Character *character_ptr, const char* name, uint8_t race, uint8_t class, 
+void set_base_stats(Character *character_ptr, const char* name,
+               uint8_t race, uint8_t class, 
                uint8_t life, uint8_t strength, uint8_t dexterity,
                uint8_t charisma, uint8_t experience, uint8_t level,
                uint8_t stamina, uint8_t mana, uint8_t gold,
@@ -521,6 +525,7 @@ void set_base_stats(Character *character_ptr, const char* name, uint8_t race, ui
                uint8_t potions)
 {
     set_base_name(character_ptr, name);
+    
     set_base_race(character_ptr, race);
     set_base_class(character_ptr, class);
     
@@ -583,10 +588,15 @@ void initPlayerParty(void)
      //                                 012345678901234567
      
     player_party[LEADER] = conan_ptr;
+    
+    set_leader(player_party[LEADER], NULL);
+
+    
     player_party_size = 3;
 
     for(i=1;i<player_party_size;++i)
     {
+        set_leader(&humans[i-1], player_ptr);
         soldier_name[14] = '0'+i; //soldier_name
         set_base_stats(&humans[i-1], soldier_name, HUMAN_SOLDIER_STATS);
         player_party[i] = &humans[i-1];
@@ -601,10 +611,14 @@ void initEnemyParty(void)
     char soldier_name[MAX_NAME_SIZE] = "an enemy orc ( )";
      //                                 012345678901234567
     enemy_party[LEADER] = ulrik_ptr;
+    
+    set_leader(enemy_party[LEADER], NULL);
+    
     enemy_party_size = 8;
 
     for(i=1;i<enemy_party_size;++i)
     {
+        set_leader(&orcs[i-1], enemy_ptr);
         soldier_name[14] = '0'+i; //soldier_name
         set_base_stats(&orcs[i-1],soldier_name, ORC_SOLDIER_STATS);
         enemy_party[i] = &orcs[i-1];
