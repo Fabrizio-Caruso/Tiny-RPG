@@ -145,9 +145,9 @@ char *stats_names[NUM_OF_STATS] = {
                    "race",   "class",    "life",   "strength",  "dexterity",  "charisma",  "experience",    "level",   "stamina",   "mana",  "gold",
                    "shield","breastplate","helmet","sword","boots","medallion","potions"};
 #define CONAN_STATS       \
-                    HUMAN,    NONE,        100,       30,           55,           10,            0,           1,           5,         10,       10,0,0,0,0,0,0,0
+                    HUMAN,    NONE,        100,       30,           55,           50,            0,           1,           5,         10,       10,0,0,0,0,0,0,0
 #define ULRIK_STATS       \
-                    ORC,      WARRIOR,      80,       15,           10,            5,            0,           1,          20,         20,        5,0,0,0,0,0,0,0
+                    ORC,      WARRIOR,      80,       15,           10,           30,            0,           1,          20,         20,        5,0,0,0,0,0,0,0
 #define SHEEWA_STATS      \
                     ELF,      ASSASSIN,     20,       10,           20,            2,            0,           1,          40,         40,       30,0,0,0,0,0,0,0
 
@@ -182,6 +182,22 @@ struct CharacterStruct
 typedef struct CharacterStruct Character;
 
 
+uint8_t get_leader_charisma(const Character* character_ptr)
+{
+    if(character_ptr->leader_ptr)
+    {
+        return get_base_charisma(character_ptr->leader_ptr);
+    }
+    else
+    {
+        // printf("\n[error]: No leader found\n");
+        return 0;
+    }
+}
+
+
+#define get_leader_charisma_bonus(_character_ptr) (get_leader_charisma(_character_ptr)/10)
+
 
 
 void sleep_ms(int milliseconds){ // cross-platform sleep function
@@ -203,29 +219,13 @@ void sleep_ms(int milliseconds){ // cross-platform sleep function
 }
 
 
-
-
-uint8_t get_leader_charisma(const Character* character_ptr)
-{
-    if(character_ptr->leader_ptr)
-    {
-        return get_base_charisma(character_ptr->leader_ptr);
-    }
-    else
-    {
-        return 0;
-    }
-}
-
-
-
 uint8_t get_stat(const Character* character_ptr, uint8_t stat_index)
 {
     uint8_t res = get_base_stat(character_ptr,stat_index);
     
     if((stat_index==STRENGTH)||(stat_index==DEXTERITY))
     {
-        res+= get_leader_charisma(character_ptr)/10;
+        res+= get_leader_charisma_bonus(character_ptr);
     }
     return res;
 }
@@ -318,10 +318,11 @@ void initCharacters(void)
 void showFightStats(const Character* character_ptr)
 {
     printf("\n");
-    printf("%s - life: %u - stamina: %u - strength: %u - dexterity: %u\n", 
+    printf("%s - life: %u - stamina: %u - strength: %u + %u - dexterity: %u + %u\n", 
            character_ptr->name, 
            get_base_life(character_ptr), get_base_stamina(character_ptr),
-           get_strength(character_ptr), get_dexterity(character_ptr));
+           get_base_strength(character_ptr), get_leader_charisma_bonus(character_ptr),
+           get_dexterity(character_ptr), get_leader_charisma_bonus(character_ptr));
     
 }
 
@@ -340,7 +341,14 @@ void showAllStats(const Character* character_ptr)
     
     for(stat_index=NUM_OF_STATIC_STATS; stat_index<NUM_OF_STATS; ++stat_index)
     {
-        printf("%s: %u\n", stats_names[stat_index], get_stat(character_ptr,stat_index));
+        if((stat_index==STRENGTH)||(stat_index==DEXTERITY))
+        {
+            printf("%s: %u + %u\n", stats_names[stat_index], get_stat(character_ptr,stat_index), get_leader_charisma_bonus(character_ptr));
+        }
+        else
+        {
+            printf("%s: %u\n", stats_names[stat_index], get_stat(character_ptr,stat_index));
+        }
     }
     printf("\n");
 }
@@ -647,7 +655,7 @@ void initPlayerParty(void)
 
     for(i=1;i<player_party_size;++i)
     {
-        set_leader(&humans[i-1], player_ptr);
+        set_leader(&humans[i-1], player_party[LEADER]);
         soldier_name[14] = '0'+i; //soldier_name
         set_base_stats(&humans[i-1], soldier_name, HUMAN_SOLDIER_STATS);
         player_party[i] = &humans[i-1];
@@ -669,7 +677,7 @@ void initEnemyParty(void)
 
     for(i=1;i<enemy_party_size;++i)
     {
-        set_leader(&orcs[i-1], enemy_ptr);
+        set_leader(&orcs[i-1], enemy_party[LEADER]);
         soldier_name[14] = '0'+i; //soldier_name
         set_base_stats(&orcs[i-1],soldier_name, ORC_SOLDIER_STATS);
         enemy_party[i] = &orcs[i-1];
