@@ -97,6 +97,16 @@
 #define get_base_stamina(_character_ptr) get_base_stat(_character_ptr,STAMINA)
 #define get_base_experience(_character_ptr) get_base_stat(_character_ptr,EXPERIENCE)
 
+#define get_base_level(_character_ptr) get_base_stat(_character_ptr,LEVEL)
+#define get_base_mana(_character_ptr) get_base_stat(_character_ptr,MANA)
+#define get_base_gold(_character_ptr) get_base_stat(_character_ptr,GOLD)
+#define get_base_shield(_character_ptr) get_base_stat(_character_ptr,SHIELD)
+#define get_base_brestplate(_character_ptr) get_base_stat(_character_ptr,BREASTPLATE)
+#define get_base_helmet(_character_ptr) get_base_stat(_character_ptr,HELMET)
+#define get_base_sword(_character_ptr) get_base_stat(_character_ptr,SWORD)
+#define get_base_boots(_character_ptr) get_base_stat(_character_ptr,BOOTS)
+#define get_base_medallion(_character_ptr) get_base_stat(_character_ptr,MEDALLION)
+#define get_base_potions(_character_ptr) get_base_stat(_character_ptr,POTIONS)
 
 #define get_name(_character_ptr) get_base_name(_character_ptr)
 #define get_race(_character_ptr) get_base_race(_character_ptr)
@@ -109,7 +119,6 @@
 #define get_charisma(_character_ptr) get_stat(_character_ptr,CHARISMA)
 #define get_stamina(_character_ptr) get_stat(_character_ptr,STAMINA)
 #define get_experience(_character_ptr) get_stat(_character_ptr,EXPERIENCE)
-
 
 
 #define increase_base_stat(_character_ptr, _stat_index, _value)  ((_character_ptr)->stat[_stat_index])+=_value;
@@ -150,17 +159,20 @@ char *stats_names[NUM_OF_STATS] = {
                    "race",   "class",    "life",   "strength",  "dexterity",  "charisma",  "experience",    "level",   "stamina",   "mana",  "gold",
                    "shield","breastplate","helmet","sword","boots","medallion","potions"};
 #define CONAN_STATS       \
-                    HUMAN,    NONE,        100,       30,           55,           90,            0,           1,           5,         10,       10,0,0,0,0,0,0,0
+                    HUMAN,    NONE,        100,       30,           55,           90,            0,           1,           5,         10,       10, \
+                    0,       0,            0,        0,      0,      0,          0
 #define ULRIK_STATS       \
-                    ORC,      WARRIOR,      80,       15,           10,            5,            0,           1,          20,         20,        5,0,0,0,0,0,0,0
+                    ORC,      WARRIOR,      80,       15,           10,            5,            0,           1,          20,         20,        5, \
+                    0,       0,            0,        0,      0,      0,          0
 #define SHEEWA_STATS      \
-                    ELF,      ASSASSIN,     20,       10,           20,            2,            0,           1,          40,         40,       30,0,0,0,0,0,0,0
-
+                    ELF,      ASSASSIN,     20,       10,           20,            2,            0,           1,          40,         40,       30, \
+                    0,       0,            0,        0,      0,      0,          0
 #define HUMAN_SOLDIER_STATS \
-                    HUMAN,    WARRIOR,      10,       10,           10,           10,            0,           1,          15,         10,       10,0,0,0,0,0,0,0
+                    HUMAN,    WARRIOR,      10,       10,           10,           10,            0,           1,          15,         10,       10, \
+                    0,       0,            0,        0,      0,      0,          0
 #define ORC_SOLDIER_STATS \
-                    ORC,      WARRIOR,      18,       12,           8,            10,            0,           1,          15,         10,       10,0,0,0,0,0,0,0
-
+                    ORC,      WARRIOR,      18,       12,           8,            10,            0,           1,          15,         10,       10, \
+                    0,       0,            0,        0,      0,      0,          0
 
 // #define VERBOSE_OFF 1
 #define VERBOSE_OFF 0
@@ -270,6 +282,12 @@ uint8_t get_stat(const Character* character_ptr, uint8_t stat_index)
 }
 
 
+uint8_t get_armor(const Character* character_ptr)
+{
+    return get_base_helmet(character_ptr)+get_base_brestplate(character_ptr)+get_base_shield(character_ptr);
+}
+
+
 // --------------------------------------------------------------------------------------------------------
 // Cross-platform sleep function
 void sleep_ms(int milliseconds){ // cross-platform sleep function
@@ -299,11 +317,13 @@ void sleep_ms(int milliseconds){ // cross-platform sleep function
 void showFightStats(const Character* character_ptr)
 {
     printf("\n");
-    printf("%s - life: %u - stamina: %u - strength: %u + %u - dexterity: %u + %u\n", 
+    printf("%s - life: %u - stamina: %u - strength: %u + %u - dexterity: %u + %u - armor: %u\n", 
            character_ptr->name, 
            get_base_life(character_ptr), get_base_stamina(character_ptr),
            get_base_strength(character_ptr), get_leader_charisma_bonus(character_ptr),
-           get_dexterity(character_ptr), get_leader_charisma_bonus(character_ptr));
+           get_dexterity(character_ptr), get_leader_charisma_bonus(character_ptr),
+           get_armor(character_ptr)
+           );
     
 }
 
@@ -350,6 +370,7 @@ void showParty(Character **party, uint8_t party_size, ShowCharacterFunction show
 }
 
 
+
 // --------------------------------------------------------------------------------------------------------
 // Fight functions
 
@@ -379,7 +400,16 @@ uint8_t _attack(Character *attacker_ptr, Character* defender_ptr, uint8_t attack
     if (ATTACK_FACTOR_ADVANTAGE*fight_stat(get_base_dexterity(attacker_ptr), attacker_stamina) >
         fight_stat(get_base_dexterity(defender_ptr), get_base_stamina(defender_ptr)))
     {
+        uint8_t defender_armor = get_armor(defender_ptr);
         blow_hits = fight_stat(get_base_strength(attacker_ptr), attacker_stamina);
+        if(blow_hits<defender_armor+1)
+        {
+            blow_hits=1;
+        }
+        else
+        {
+            blow_hits -= defender_armor;
+        }
         blow(defender_ptr, blow_hits);
     }
     decrease_base_stamina(attacker_ptr,1);
