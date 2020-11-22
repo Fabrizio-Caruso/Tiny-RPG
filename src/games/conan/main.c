@@ -133,21 +133,26 @@
 #define SHEEWA   2
 
 
+#define get_leader_charisma_bonus(_character_ptr) (get_leader_charisma(_character_ptr)/10)
+
+
 #define STAMINA_RECHARGE 10
-#define LOW_STAMINA_THRESHOLD 10
-#define low_stamina(stamina) (stamina<LOW_STAMINA_THRESHOLD)
+#define LOW_STAMINA_THRESHOLD 12
+
+#define low_stamina(stamina) ((stamina)<LOW_STAMINA_THRESHOLD)
 
 #define ATTACK_FACTOR_ADVANTAGE 2
 
+#define is_fight_stat(_stat_index) ((_stat_index)==STRENGTH)||((_stat_index)==DEXTERITY)
 
 char *stats_names[NUM_OF_STATS] = {
 //                  RACE      CLASS       LIFE      STRENGTH     DEXTERITY     CHARSIMA      EXPERIENCE      LEVEL    STAMINA      MANA     GOLD
                    "race",   "class",    "life",   "strength",  "dexterity",  "charisma",  "experience",    "level",   "stamina",   "mana",  "gold",
                    "shield","breastplate","helmet","sword","boots","medallion","potions"};
 #define CONAN_STATS       \
-                    HUMAN,    NONE,        100,       30,           55,           50,            0,           1,           5,         10,       10,0,0,0,0,0,0,0
+                    HUMAN,    NONE,        100,       30,           55,           90,            0,           1,           5,         10,       10,0,0,0,0,0,0,0
 #define ULRIK_STATS       \
-                    ORC,      WARRIOR,      80,       15,           10,           30,            0,           1,          20,         20,        5,0,0,0,0,0,0,0
+                    ORC,      WARRIOR,      80,       15,           10,            5,            0,           1,          20,         20,        5,0,0,0,0,0,0,0
 #define SHEEWA_STATS      \
                     ELF,      ASSASSIN,     20,       10,           20,            2,            0,           1,          40,         40,       30,0,0,0,0,0,0,0
 
@@ -155,6 +160,7 @@ char *stats_names[NUM_OF_STATS] = {
                     HUMAN,    WARRIOR,      10,       10,           10,           10,            0,           1,          15,         10,       10,0,0,0,0,0,0,0
 #define ORC_SOLDIER_STATS \
                     ORC,      WARRIOR,      18,       12,           8,            10,            0,           1,          15,         10,       10,0,0,0,0,0,0,0
+
 
 // #define VERBOSE_OFF 1
 #define VERBOSE_OFF 0
@@ -170,7 +176,9 @@ char *stats_names[NUM_OF_STATS] = {
 #endif
 
 
+// // --------------------------------------------------------------------------------------------------------
 
+// Character struct
 struct CharacterStruct 
 {
     uint8_t stat[NUM_OF_STATS];
@@ -181,58 +189,13 @@ struct CharacterStruct
 };
 typedef struct CharacterStruct Character;
 
-
-uint8_t get_leader_charisma(const Character* character_ptr)
-{
-    if(character_ptr->leader_ptr)
-    {
-        return get_base_charisma(character_ptr->leader_ptr);
-    }
-    else
-    {
-        // printf("\n[error]: No leader found\n");
-        return 0;
-    }
-}
+// --------------------------------------------------------------------------------------------------------
+// Display function typedef
+typedef void (*ShowCharacterFunction) (const Character *);
 
 
-#define get_leader_charisma_bonus(_character_ptr) (get_leader_charisma(_character_ptr)/10)
-
-
-
-void sleep_ms(int milliseconds){ // cross-platform sleep function
-#ifdef WIN32
-    Sleep(milliseconds);
-#elif _POSIX_C_SOURCE >= 199309L
-    struct timespec ts;
-    ts.tv_sec = milliseconds / 1000;
-    ts.tv_nsec = (milliseconds % 1000) * 1000000;
-    nanosleep(&ts, NULL);
-#elif defined(__GCC__)
-    if (milliseconds >= 1000)
-      sleep(milliseconds / 1000);
-    usleep((milliseconds % 1000) * 1000);
-#else
-    uint16_t i;
-    for(i=1;i<milliseconds;++i){};
-#endif
-}
-
-
-uint8_t get_stat(const Character* character_ptr, uint8_t stat_index)
-{
-    uint8_t res = get_base_stat(character_ptr,stat_index);
-    
-    if((stat_index==STRENGTH)||(stat_index==DEXTERITY))
-    {
-        res+= get_leader_charisma_bonus(character_ptr);
-    }
-    return res;
-}
-
-
-
-#define SLEEP(n) sleep_ms(10*n)
+// --------------------------------------------------------------------------------------------------------
+// Variable initialization
 
 char *race_names[NUM_OF_RACES] = {
     "human", "orc", "elf"
@@ -279,41 +242,59 @@ uint8_t characters_stats[NUM_OF_CHARACTERS][NUM_OF_STATS] =
 };
 
 
-typedef void (*ShowCharacterFunction) (const Character *);
-
-
-void initNames(void)
+// --------------------------------------------------------------------------------------------------------
+// Getters and Setters funtcions
+uint8_t get_leader_charisma(const Character* character_ptr)
 {
-    uint8_t i;
-    
-    for(i=0;i<NUM_OF_CHARACTERS;++i)
+    if(character_ptr->leader_ptr)
     {
-        memcpy(&characters[i].name,characters_names[i],MAX_NAME_SIZE);
+        return get_base_charisma(character_ptr->leader_ptr);
+    }
+    else
+    {
+        // printf("\n[error]: No leader found\n");
+        return 0;
     }
 }
 
 
-void initFeatures(void)
+uint8_t get_stat(const Character* character_ptr, uint8_t stat_index)
 {
-    uint8_t char_index;
-    uint8_t stat_index;
+    uint8_t res = get_base_stat(character_ptr,stat_index);
     
-    for(char_index=0;char_index<NUM_OF_CHARACTERS;++char_index)
+    if(is_fight_stat(stat_index))
     {
-        for(stat_index=0;stat_index<NUM_OF_STATS;++stat_index)
-        {
-            set_base_stat(&characters[char_index], stat_index, characters_stats[char_index][stat_index]);
-        }
+        res+= get_leader_charisma_bonus(character_ptr);
     }
+    return res;
 }
 
 
-void initCharacters(void)
-{
-    initNames();
-    initFeatures();
+// --------------------------------------------------------------------------------------------------------
+// Cross-platform sleep function
+void sleep_ms(int milliseconds){ // cross-platform sleep function
+#ifdef WIN32
+    Sleep(milliseconds);
+#elif _POSIX_C_SOURCE >= 199309L
+    struct timespec ts;
+    ts.tv_sec = milliseconds / 1000;
+    ts.tv_nsec = (milliseconds % 1000) * 1000000;
+    nanosleep(&ts, NULL);
+#elif defined(__GCC__)
+    if (milliseconds >= 1000)
+      sleep(milliseconds / 1000);
+    usleep((milliseconds % 1000) * 1000);
+#else
+    uint16_t i;
+    for(i=1;i<milliseconds;++i){};
+#endif
 }
 
+#define SLEEP(n) sleep_ms(10*n)
+
+
+// --------------------------------------------------------------------------------------------------------
+// Display functions
 
 void showFightStats(const Character* character_ptr)
 {
@@ -341,7 +322,7 @@ void showAllStats(const Character* character_ptr)
     
     for(stat_index=NUM_OF_STATIC_STATS; stat_index<NUM_OF_STATS; ++stat_index)
     {
-        if((stat_index==STRENGTH)||(stat_index==DEXTERITY))
+        if(is_fight_stat(stat_index))
         {
             printf("%s: %u + %u\n", stats_names[stat_index], get_stat(character_ptr,stat_index), get_leader_charisma_bonus(character_ptr));
         }
@@ -368,6 +349,9 @@ void showParty(Character **party, uint8_t party_size, ShowCharacterFunction show
     printf("\n");
 }
 
+
+// --------------------------------------------------------------------------------------------------------
+// Fight functions
 
 void blow(Character *defender_ptr, uint8_t value)
 {
@@ -517,6 +501,16 @@ void print_stamina_string(const Character *character_ptr)
     SLEEP(1);
 }
 
+void apply_stamina_bonus(Character** party, uint8_t party_size)
+{
+    uint8_t i;
+    
+    for(i=1;i<party_size;++i)
+    {
+        increase_base_stamina(party[i], get_leader_charisma_bonus(party[i]));
+    }
+}
+
 
 void party_fight(void)
 {
@@ -524,6 +518,14 @@ void party_fight(void)
     uint8_t i;
     uint8_t round = 0;
     uint8_t verbose;
+    
+    apply_stamina_bonus(player_party, player_party_size);
+    apply_stamina_bonus(enemy_party, enemy_party_size);
+    
+    
+    // DEBUG
+    // showParty(player_party, player_party_size, showFightStats);
+    // showParty(enemy_party, enemy_party_size, showFightStats);
     
     while (get_base_life(player_ptr) && get_base_life(enemy_ptr))
     {
@@ -569,6 +571,42 @@ void party_fight(void)
         }
     }
     
+}
+
+
+// --------------------------------------------------------------------------------------------------------
+// Initialization functions
+
+void initNames(void)
+{
+    uint8_t i;
+    
+    for(i=0;i<NUM_OF_CHARACTERS;++i)
+    {
+        memcpy(&characters[i].name,characters_names[i],MAX_NAME_SIZE);
+    }
+}
+
+
+void initFeatures(void)
+{
+    uint8_t char_index;
+    uint8_t stat_index;
+    
+    for(char_index=0;char_index<NUM_OF_CHARACTERS;++char_index)
+    {
+        for(stat_index=0;stat_index<NUM_OF_STATS;++stat_index)
+        {
+            set_base_stat(&characters[char_index], stat_index, characters_stats[char_index][stat_index]);
+        }
+    }
+}
+
+
+void initCharacters(void)
+{
+    initNames();
+    initFeatures();
 }
 
 
@@ -686,6 +724,8 @@ void initEnemyParty(void)
 }
 
 
+
+// --------------------------------------------------------------------------------------------------------
 int main(void)
 {
     
@@ -730,20 +770,19 @@ int main(void)
 
     
     showParty(enemy_party, enemy_party_size, showFightStats);
-    
-    //enemy_party_size = 
     enemy_party_size = removeDeadMembers(enemy_party, enemy_party_size);
-    
     printf("\n\n");
-    
-    // printf("DEBUG\n");
-    // showParty(aux_party, enemy_party_size, showFightStats);
-
     printf("After removal\n");
-    
-    
     showParty(enemy_party, enemy_party_size, showFightStats);
     
+    printf("\n\n");
+
+    
+    showParty(player_party, player_party_size, showFightStats);
+    player_party_size = removeDeadMembers(player_party, player_party_size);
+    printf("\n\n");
+    printf("After removal\n");
+    showParty(player_party, player_party_size, showFightStats);
 
     return EXIT_SUCCESS;
 }
