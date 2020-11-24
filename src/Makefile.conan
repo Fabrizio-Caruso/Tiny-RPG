@@ -19,14 +19,6 @@ include makefiles.common/auxiliary/Makefile_compilers
 include makefiles.common/auxiliary/Makefile_common
 
 
-#####################################################################
-# Draw skip
-LIGHT_DRAW_SKIP ?= -DBOMB_DRAW_SKIP=1 -DWALL_DRAW_SKIP=3
-DRAW_SKIP ?=       -DBOMB_DRAW_SKIP=1 -DWALL_DRAW_SKIP=7
-EXTRA_DRAW_SKIP ?= -DBOMB_DRAW_SKIP=3 -DWALL_DRAW_SKIP=15
-ULTRA_DRAW_SKIP ?= -DBOMB_DRAW_SKIP=7 -DWALL_DRAW_SKIP=15 -DGHOST_DRAW_SKIP=1 
-
-
 ######################################################################
 # Cross-Shoot files
 #

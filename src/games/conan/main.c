@@ -57,6 +57,12 @@
 #define MAX_ELFS_SIZE 8
 
 
+#define MARKET_DISTANCE 5
+#define EASY_QUEST_DISTANCE 3
+#define HARD_QUEST_DISTANCE 6
+#define FINAL_QUEST_DISTANCE 9
+
+
 #define set_base_stat(_character_ptr, _stat_index, _value)  (_character_ptr)->stat[_stat_index] =  _value
 
 #define set_leader(_character_ptr,_leader_ptr) (_character_ptr)->leader_ptr = _leader_ptr
@@ -154,26 +160,6 @@
 
 #define is_fight_stat(_stat_index) ((_stat_index)==STRENGTH)||((_stat_index)==DEXTERITY)
 
-char *stats_names[NUM_OF_STATS] = {
-//                  RACE      CLASS       LIFE      STRENGTH     DEXTERITY     CHARSIMA      EXPERIENCE      LEVEL    STAMINA      MANA     GOLD
-                   "race",   "class",    "life",   "strength",  "dexterity",  "charisma",  "experience",    "level",   "stamina",   "mana",  "gold",
-                   "shield","breastplate","helmet","sword","boots","medallion","potions"};
-#define CONAN_STATS       \
-                    HUMAN,    NONE,        100,       30,           55,           90,            0,           1,           5,         10,       10, \
-                    0,       0,            0,        0,      0,      0,          0
-#define ULRIK_STATS       \
-                    ORC,      WARRIOR,      80,       15,           10,            5,            0,           1,          20,         20,        5, \
-                    0,       0,            0,        0,      0,      0,          0
-#define SHEEWA_STATS      \
-                    ELF,      ASSASSIN,     20,       10,           20,            2,            0,           1,          40,         40,       30, \
-                    0,       0,            0,        0,      0,      0,          0
-#define HUMAN_SOLDIER_STATS \
-                    HUMAN,    WARRIOR,      10,       10,           10,           10,            0,           1,          15,         10,       10, \
-                    0,       0,            0,        0,      0,      0,          0
-#define ORC_SOLDIER_STATS \
-                    ORC,      WARRIOR,      18,       12,           8,            10,            0,           1,          15,         10,       10, \
-                    0,       0,            0,        0,      0,      0,          0
-
 // #define VERBOSE_OFF 1
 #define VERBOSE_OFF 0
 #define VERBOSE_ON  1
@@ -208,6 +194,27 @@ typedef void (*ShowCharacterFunction) (const Character *);
 
 // --------------------------------------------------------------------------------------------------------
 // Variable initialization
+
+char *stats_names[NUM_OF_STATS] = {
+//                  RACE      CLASS       LIFE      STRENGTH     DEXTERITY     CHARSIMA      EXPERIENCE      LEVEL    STAMINA      MANA     GOLD
+                   "race",   "class",    "life",   "strength",  "dexterity",  "charisma",  "experience",    "level",   "stamina",   "mana",  "gold",
+                   "shield","breastplate","helmet","sword","boots","medallion","potions"};
+#define CONAN_STATS       \
+                    HUMAN,    NONE,        100,       30,           55,           90,            0,           1,           5,         10,       10, \
+                    0,       0,            0,        0,      0,      0,          0
+#define ULRIK_STATS       \
+                    ORC,      WARRIOR,      80,       15,           10,            5,            0,           1,          20,         20,        5, \
+                    0,       0,            0,        0,      0,      0,          0
+#define SHEEWA_STATS      \
+                    ELF,      ASSASSIN,     20,       10,           20,            2,            0,           1,          40,         40,       30, \
+                    0,       0,            0,        0,      0,      0,          0
+#define HUMAN_SOLDIER_STATS \
+                    HUMAN,    WARRIOR,      10,       10,           10,           10,            0,           1,          15,         10,       10, \
+                    0,       0,            0,        0,      0,      0,          0
+#define ORC_SOLDIER_STATS \
+                    ORC,      WARRIOR,      18,       12,           8,            10,            0,           1,          15,         10,       10, \
+                    0,       0,            0,        0,      0,      0,          0
+
 
 char *race_names[NUM_OF_RACES] = {
     "human", "orc", "elf"
@@ -253,6 +260,20 @@ uint8_t characters_stats[NUM_OF_CHARACTERS][NUM_OF_STATS] =
     {CONAN_STATS}, {ULRIK_STATS}, {SHEEWA_STATS}
 };
 
+
+enum Location {INN, SQUARE, WAY_THERE, WAY_BACK, EASY_QUEST, HARD_QUEST, FINAL_QUEST, MARKET};
+
+enum Location player_location;
+
+uint8_t quest_week;
+
+uint8_t adventure_week;
+
+char selection;
+
+uint8_t destination_distance;
+
+enum Location destination;
 
 // --------------------------------------------------------------------------------------------------------
 // Getters and Setters funtcions
@@ -541,6 +562,23 @@ void apply_stamina_bonus(Character** party, uint8_t party_size)
     }
 }
 
+uint8_t party_speed(Character** party_ptr, uint8_t party_size)
+{
+    uint8_t i;
+    uint8_t r = 0;
+    
+    for(i=0;i<party_size;++i)
+    {
+        r+=get_dexterity(party_ptr[i]);
+    }
+    return r/=party_size;
+}
+
+uint8_t party_escape(void)
+{
+    return (party_speed(player_party, player_party_size)>party_speed(enemy_party, enemy_party_size));
+}
+
 
 void party_fight(void)
 {
@@ -756,6 +794,223 @@ void initEnemyParty(void)
 
 
 // --------------------------------------------------------------------------------------------------------
+
+void square(void)
+{
+    
+    
+    square_start:
+    printf("You are in the main square of the village where you can meet heroes and mercenaries\n");
+    
+    
+    selection = getchar();
+    
+    switch(selection)
+    {
+        case 'm':
+            destination = MARKET;
+            destination_distance = 5;
+            quest_week = 1;
+            player_location = WAY_THERE;
+            break;
+        case 'i': 
+            player_location = INN;
+            break;
+        default: 
+            goto square_start;
+    }
+}
+
+
+void inn(void)
+{
+
+    inn_start:
+    printf("You are at the Inn, where new adventures are proposed\n");
+
+    
+    
+    selection = getchar();
+    
+    switch(selection)
+    {
+        case '1':
+            destination = EASY_QUEST;
+            destination_distance = EASY_QUEST_DISTANCE;
+            quest_week = 1;
+            player_location = WAY_THERE;
+            break;
+        case '2':
+            destination = HARD_QUEST;
+            destination_distance = HARD_QUEST_DISTANCE;
+            quest_week = 1;
+            player_location = WAY_THERE;
+            break;
+        case '3':
+            destination = FINAL_QUEST;
+            destination_distance = FINAL_QUEST_DISTANCE;
+            quest_week = 1;
+            player_location = WAY_THERE;
+            break;
+        case 's': 
+            player_location = SQUARE;
+            break;
+        default: 
+            goto inn_start;
+    }
+}
+
+
+void way_there(void)
+{
+    way_there_start:
+    printf("You are on the week number %u of your journey\n", quest_week);
+    
+    selection = getchar();
+    switch(selection)
+    {
+        case 'f': 
+            party_fight();
+            break;
+        default: 
+            goto way_there_start;
+    }
+    if(++quest_week==destination_distance)
+    {
+        player_location = destination;
+    }
+    
+}
+
+void way_back(void)
+{
+    way_back_start:
+    printf("You are on the week number %u of your return journey\n", quest_week);
+    
+    selection = getchar();
+    switch(selection)
+    {
+        case 'f': 
+            party_fight();
+            break;
+        default: 
+            goto way_back_start;
+    }
+    if(--quest_week==0)
+    {
+        player_location = destination;
+    }
+}
+
+
+void easy_quest(void)
+{
+    printf("You have reached the destination\n");
+    
+    getchar();
+    
+    player_location = WAY_BACK;
+    destination_distance = EASY_QUEST_DISTANCE;
+    destination = SQUARE;
+    
+    
+}
+
+void hard_quest(void)
+{
+    printf("You have reached the destination\n");
+    
+    getchar();
+    
+    player_location = WAY_BACK;
+    destination_distance = HARD_QUEST_DISTANCE;
+    destination = SQUARE;
+    
+    
+}
+
+void final_quest(void)
+{
+    printf("You have reached the final destination\n");
+    
+    getchar();
+}
+
+
+void market(void)
+{
+    market_start:
+    printf("You are at the market\n");
+    
+    selection = getchar();
+    switch(selection)
+    {
+        case 'b':
+            player_location = WAY_BACK;
+            quest_week = 1;
+            destination_distance = MARKET_DISTANCE;
+            destination = SQUARE;
+            break;
+        default: 
+            goto market_start;
+    }
+}
+
+
+
+int main(void)
+{
+    uint8_t final_quest_done = 0;
+    
+    initCharacters();
+    
+    initPlayerParty();
+    initEnemyParty();
+   
+    player_ptr = player_party[LEADER];
+    enemy_ptr = enemy_party[LEADER];
+
+    player_location = SQUARE;
+
+    while(!final_quest_done)
+    {
+        switch(player_location)
+        {
+            case SQUARE:
+                square();
+                break;
+            case INN:
+                inn();
+                break;
+            case WAY_THERE:
+                way_there();
+                break;
+            case WAY_BACK:
+                way_back();
+                break;
+            case EASY_QUEST:
+                easy_quest();
+                break;
+            case HARD_QUEST:
+                hard_quest();
+                break;
+            case FINAL_QUEST:
+                final_quest();
+                break;
+            case MARKET:
+                market();
+                break;
+        }
+        
+        getchar();
+    }
+    
+
+    
+    return 0;
+}
+
+/*
 int main(void)
 {
     
@@ -770,12 +1025,18 @@ int main(void)
     player_ptr = player_party[LEADER];
     enemy_ptr = enemy_party[LEADER];
    
-    // showAllStatsForAllCharacters();
     showParty(player_party, player_party_size, showAllStats);
     
     getchar();
     
     showParty(enemy_party, enemy_party_size, showFightStats);
+
+    getchar();
+    
+    printf("player party speed: %u\n", party_speed(player_party,player_party_size));
+    printf("enemy party speed: %u\n", party_speed(enemy_party,enemy_party_size));
+
+    printf("party escape: %u\n", party_escape());
 
     
     getchar();
@@ -816,6 +1077,6 @@ int main(void)
 
     return EXIT_SUCCESS;
 }
-
+*/
 
 
