@@ -165,6 +165,15 @@
 #define VERBOSE_ON  1
 
 
+
+#ifdef _WIN32
+#define clrscr() system("cls");
+#else
+#include <stdio.h>
+#define clrscr() printf("\e[1;1H\e[2J")
+#endif
+
+
 #ifdef WIN32
 #include <windows.h>
 #elif _POSIX_C_SOURCE >= 199309L
@@ -828,12 +837,83 @@ void initEnemyParty(void)
 }
 
 
+// ----------------------------------------------
+
+
+void print_conan(void)
+{
+    printf("   _____  \n");
+    printf("  / ____| \n");
+    printf(" | |      \n");
+    printf(" | |     ___  _ __   __ _ _ __  \n");
+    printf(" | |    / _ \\| '_ \\ / _` | '_ \\ \n");
+    printf(" | |___| (_) | | | | (_| | | | |\n");
+    printf("  \\_____\\___/|_| |_|\\__,_|_| |_|\n");
+    printf("\n");
+}
+
+
+void print_market(void)
+{
+    printf("  __  __            _        _   \n");
+    printf(" |  \\/  |          | |      | |  \n");
+    printf(" | \\  / | __ _ _ __| | _____| |_ \n");
+    printf(" | |\\/| |/ _` | '__| |/ / _ \\ __|\n");
+    printf(" | |  | | (_| | |  |   <  __/ |_ \n");
+    printf(" |_|  |_|\\__,_|_|  |_|\\_\\___|\\__|\n");
+    printf("\n");
+}
+
+
+void print_the_inn(void)
+{
+    printf("  _______ _            _____             \n");
+    printf(" |__   __| |          |_   _|            \n");
+    printf("    | |  | |__   ___    | |  _ __  _ __  \n");
+    printf("    | |  | '_ \\ / _ \\   | | | '_ \\| '_ \\ \n");
+    printf("    | |  | | | |  __/  _| |_| | | | | | |\n");
+    printf("    |_|  |_| |_|\\___| |_____|_| |_|_| |_|\n");
+    printf("\n");
+}
+
+
+void print_the_square(void)
+{
+    printf("  _______ _             _____                            \n");
+    printf(" |__   __| |           / ____|                           \n");
+    printf("    | |  | |__   ___  | (___   __ _ _   _  __ _ _ __ ___ \n");
+    printf("    | |  | '_ \\ / _ \\  \\___ \\ / _` | | | |/ _` | '__/ _ \n");
+    printf("    | |  | | | |  __/  ____) | (_| | |_| | (_| | | |  __/\n");
+    printf("    |_|  |_| |_|\\___| |_____/ \\__, |\\__,_|\\__,_|_|  \\___|\n");
+    printf("                                 | |                     \n");
+    printf("                                 |_|                     \n");
+    printf("\n");
+}
+
+
+void print_journey(void)
+{
+    printf("       _                                   \n");
+    printf("      | |                                  \n");
+    printf("      | | ___  _   _ _ __ _ __   ___ _   _ \n");
+    printf("  _   | |/ _ \\| | | | '__| '_ \\ / _ \\ | | |\n");
+    printf(" | |__| | (_) | |_| | |  | | | |  __/ |_| |\n");
+    printf("  \\____/ \\___/ \\__,_|_|  |_| |_|\\___|\\__, |\n");
+    printf("                                      __/ |\n");
+    printf("                                     |___/ \n");
+    printf("\n");
+}
+
 
 // --------------------------------------------------------------------------------------------------------
 
 void square(void)
 {
     square_start:
+    
+    clrscr();
+    print_the_square();
+    
     printf("\n\n");
     printf("You are in the main square of the village where you can meet heroes and mercenaries\n");
     printf("\n");
@@ -864,6 +944,9 @@ void square(void)
 void inn(void)
 {
     inn_start:
+    clrscr();
+    print_the_inn();
+    
     printf("\n\n");
     printf("You are at the Inn, where new adventures are proposed\n");
     printf("\n");
@@ -937,6 +1020,10 @@ void journey(void)
     initEnemyParty();
     
     journey_start:
+    
+    clrscr();
+    print_journey();
+    
     printf("\n\n");
     printf("You are on the week number %u of your journey\n", quest_week);
     if(player_location==WAY_BACK)
@@ -1016,6 +1103,12 @@ void final_quest(void)
 void market(void)
 {
     market_start:
+    
+    clrscr();
+    print_market();
+    
+    printf("\n");
+    
     printf("You are at the market\n");
     
     selection = getchar();
@@ -1033,10 +1126,15 @@ void market(void)
 }
 
 
-
 int main(void)
 {
     uint8_t final_quest_done = 0;
+    
+    clrscr();
+    print_conan();
+    
+    printf("Press a key to start\n");
+    getchar();
     
     initCharacters();
     
