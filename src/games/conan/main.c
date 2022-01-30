@@ -230,7 +230,7 @@ const char *class_names[NUM_OF_CLASSES] = {
 Character *player_party[MAX_PLAYER_PARTY_SIZE];
 uint8_t player_party_size;
 
-Character *aux_player_party[MAX_PLAYER_PARTY_SIZE];
+Character aux_player_party[MAX_PLAYER_PARTY_SIZE];
 
 Character *enemy_party[MAX_ENEMY_PARTY_SIZE];
 uint8_t enemy_party_size;
@@ -917,17 +917,17 @@ void normalize_player(void)
         if(get_base_life(player_party[i]))
         {
             ++count;
-            // *aux_player_party[count]= *player_party[i];
+            aux_player_party[count]= *player_party[i];
         }
     }
     
     printf("\n--- DEBUG normalize_player\n");
     printf("DEBUG ---- count %d\n", count);
     
-    // for(i=0;i<count;++i)
-    // {
-        // *player_party[i] = *aux_player_party[i]; // TODO: change to multiple single field copies for 8-bit targets
-    // }
+    for(i=1;i<count;++i)
+    {
+        *player_party[i] = aux_player_party[i]; // TODO: change to multiple single field copies for 8-bit targets
+    }
     player_party_size = count;
 }
 
