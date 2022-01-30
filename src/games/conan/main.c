@@ -195,7 +195,9 @@ typedef void (*ShowCharacterFunction) (const Character *);
 // --------------------------------------------------------------------------------------------------------
 // Variable initialization
 
-char *stats_names[NUM_OF_STATS] = {
+#define ULRIK_LIFE 80
+
+const char *stats_names[NUM_OF_STATS] = {
 //                  RACE      CLASS       LIFE      STRENGTH     DEXTERITY     CHARSIMA      EXPERIENCE      LEVEL    STAMINA      MANA     GOLD
                    "race",   "class",    "life",   "strength",  "dexterity",  "charisma",  "experience",    "level",   "stamina",   "mana",  "gold",
                    "shield","breastplate","helmet","sword","boots","medallion","potions"};
@@ -203,7 +205,7 @@ char *stats_names[NUM_OF_STATS] = {
                     HUMAN,    NONE,        100,       30,           55,           90,            0,           1,           5,         10,       10, \
                     0,       0,            0,        0,      0,      0,          0
 #define ULRIK_STATS       \
-                    ORC,      WARRIOR,      80,       15,           10,            5,            0,           1,          20,         20,        5, \
+                    ORC,      WARRIOR,     ULRIK_LIFE,       15,           10,            5,            0,           1,          20,         20,        5, \
                     0,       0,            0,        0,      0,      0,          0
 #define SHEEWA_STATS      \
                     ELF,      ASSASSIN,     20,       10,           20,            2,            0,           1,          40,         40,       30, \
@@ -216,17 +218,19 @@ char *stats_names[NUM_OF_STATS] = {
                     0,       0,            0,        0,      0,      0,          0
 
 
-char *race_names[NUM_OF_RACES] = {
+const char *race_names[NUM_OF_RACES] = {
     "human", "orc", "elf"
 };
 
-char *class_names[NUM_OF_CLASSES] = {
+const char *class_names[NUM_OF_CLASSES] = {
     "none", "warrior", "wizard", "bard", "assassin"
 };
 
 
 Character *player_party[MAX_PLAYER_PARTY_SIZE];
 uint8_t player_party_size;
+
+Character *aux_player_party[MAX_PLAYER_PARTY_SIZE];
 
 Character *enemy_party[MAX_ENEMY_PARTY_SIZE];
 uint8_t enemy_party_size;
@@ -259,7 +263,6 @@ uint8_t characters_stats[NUM_OF_CHARACTERS][NUM_OF_STATS] =
 {
     {CONAN_STATS}, {ULRIK_STATS}, {SHEEWA_STATS}
 };
-
 
 enum Location {INN, SQUARE, WAY_THERE, WAY_BACK, EASY_QUEST, HARD_QUEST, FINAL_QUEST, MARKET};
 
@@ -329,7 +332,8 @@ void sleep_ms(int milliseconds){ // cross-platform sleep function
 #endif
 }
 
-#define SLEEP(n) sleep_ms(10*n)
+#define SLEEP(n) sleep(1)
+//sleep_ms(500*n)
 
 
 // --------------------------------------------------------------------------------------------------------
@@ -337,6 +341,8 @@ void sleep_ms(int milliseconds){ // cross-platform sleep function
 
 void showFightStats(const Character* character_ptr)
 {
+    printf("\n----DEBUG showFightStats----\n");
+    
     printf("\n");
     printf("%s - life: %u - stamina: %u - strength: %u + %u - dexterity: %u + %u - armor: %u\n", 
            character_ptr->name, 
@@ -453,7 +459,7 @@ void attack(Character *attacker_ptr, Character *defender_ptr, uint8_t attacker_s
         {
             printf("%s attacks but %s fends off the attack\n", attacker_ptr->name, defender_ptr->name);
         }
-        SLEEP(1);
+        getchar();
     }
 }
 
@@ -518,11 +524,11 @@ void fight_round(Character* first_ptr, Character* second_ptr, uint8_t verbose)
 
 
 
-void many_vs_one_fight(Character *group_ptr, uint8_t enemy_number, Character *single_ptr)
+void many_vs_one_fight(Character *group_ptr, uint8_t group_size, Character *single_ptr)
 {
     uint8_t i;
     
-    for(i=0;i<enemy_number;++i)
+    for(i=0;i<group_size;++i)
     {
         if(get_base_life(group_ptr) && get_base_life(single_ptr))
         {
@@ -558,7 +564,10 @@ void apply_stamina_bonus(Character** party, uint8_t party_size)
     
     for(i=1;i<party_size;++i)
     {
+        // printf("\nDEBUG) increase stamina %d\n",i);
         increase_base_stamina(party[i], get_leader_charisma_bonus(party[i]));
+        // printf("\nDEBUG) DONE increase stamina %d\n",i);
+
     }
 }
 
@@ -590,10 +599,16 @@ void party_fight(void)
     apply_stamina_bonus(player_party, player_party_size);
     apply_stamina_bonus(enemy_party, enemy_party_size);
     
+    printf("\n**************DEBUG*************** after apply stamina\n");
     
     // DEBUG
     // showParty(player_party, player_party_size, showFightStats);
-    // showParty(enemy_party, enemy_party_size, showFightStats);
+    showParty(enemy_party, enemy_party_size, showFightStats);
+    
+    if(get_base_life(player_ptr))
+    {
+        printf("PLAYER BASE LIFE OK\n");
+    }
     
     while (get_base_life(player_ptr) && get_base_life(enemy_ptr))
     {
@@ -609,6 +624,7 @@ void party_fight(void)
         printf("\nFight!\n");
         getchar();
         
+        // Start a fight round between the player leader and the enemy leader
         fight_round(player_party[LEADER],enemy_party[LEADER], VERBOSE_ON);
         
         // printf("----------------------------------\n");
@@ -617,10 +633,14 @@ void party_fight(void)
         {
             for(i=1;i<min_size;++i)
             {
-                Character* player_party_member_ptr = player_party[i*(i && get_base_life(player_party[i]))];
+                // Select the i-th player party member if alive, otherwise select player leader
+                Character* player_party_member_ptr = player_party[i*(i && get_base_life(player_party[i]))]; 
+                
+                // Select the i-th  enemy party member if alive, otherwise select enemy leader
                 Character* enemy_party_member_ptr  = enemy_party[i*(i && get_base_life(enemy_party[i]))];
                 verbose = !(get_base_life(player_party[i]) && get_base_life(enemy_party[i]));
                 
+                // if not both leaders, start a fight round
                 if(player_party_member_ptr!=player_ptr || enemy_party_member_ptr!=enemy_ptr)
                 {
                     fight_round(player_party_member_ptr, enemy_party_member_ptr, verbose);
@@ -628,17 +648,25 @@ void party_fight(void)
             }
             printf("----------------------------------\n");
 
+
             if(player_party_size>min_size) // You have more party members
             {
-                many_vs_one_fight(player_party[i], player_party_size-enemy_party_size, enemy_ptr);
+                for(i=min_size;i<player_party_size;++i)
+                {
+                    many_vs_one_fight(player_party[i], player_party_size-enemy_party_size, enemy_ptr);
+                }
             }
             else // The enemy party has more members
             {
-                many_vs_one_fight(enemy_party[i], enemy_party_size - player_party_size, player_ptr);
+                for(i=min_size;i<enemy_party_size;++i)
+                {
+                    many_vs_one_fight(enemy_party[i], enemy_party_size - player_party_size, player_ptr);
+                }
             }
         }
     }
     
+    // TODO: Recompute vectors and sizes
 }
 
 
@@ -656,25 +684,28 @@ void initNames(void)
 }
 
 
-void initFeatures(void)
+void initFeatures(uint8_t character_index)
 {
-    uint8_t char_index;
     uint8_t stat_index;
     
-    for(char_index=0;char_index<NUM_OF_CHARACTERS;++char_index)
+    // printf("\nDEBUG %d\n", character_index);
+    for(stat_index=0;stat_index<NUM_OF_STATS;++stat_index)
     {
-        for(stat_index=0;stat_index<NUM_OF_STATS;++stat_index)
-        {
-            set_base_stat(&characters[char_index], stat_index, characters_stats[char_index][stat_index]);
-        }
+        set_base_stat(&characters[character_index], stat_index, characters_stats[character_index][stat_index]);
     }
 }
 
 
 void initCharacters(void)
 {
+    uint8_t char_index;
+    
     initNames();
-    initFeatures();
+    
+    for(char_index=0;char_index<NUM_OF_CHARACTERS;++char_index)
+    {
+        initFeatures(char_index);
+    }
 }
 
 
@@ -754,6 +785,8 @@ void initPlayerParty(void)
      
     player_party[LEADER] = conan_ptr;
     
+    initFeatures(ULRIK);
+    
     set_leader(player_party[LEADER], NULL);
 
     
@@ -777,10 +810,13 @@ void initEnemyParty(void)
      //                                 012345678901234567
     enemy_party[LEADER] = ulrik_ptr;
     
+    ulrik_ptr->stat[LIFE] = ULRIK_LIFE;
+    
     set_leader(enemy_party[LEADER], NULL);
     
-    enemy_party_size = 8;
+    enemy_party_size = 1+rand()%7;
 
+    // Initialize enemy minions
     for(i=1;i<enemy_party_size;++i)
     {
         set_leader(&orcs[i-1], enemy_party[LEADER]);
@@ -797,11 +833,14 @@ void initEnemyParty(void)
 
 void square(void)
 {
-    
-    
     square_start:
+    printf("\n\n");
     printf("You are in the main square of the village where you can meet heroes and mercenaries\n");
-    
+    printf("\n");
+    printf("(m) Start your trip to the Market\n");
+    printf("\n");
+    printf("(i) Enter the Inn\n");
+    printf("\n");
     
     selection = getchar();
     
@@ -824,11 +863,18 @@ void square(void)
 
 void inn(void)
 {
-
     inn_start:
+    printf("\n\n");
     printf("You are at the Inn, where new adventures are proposed\n");
-
-    
+    printf("\n");
+    printf("(1) A short quest\n");
+    printf("\n");
+    printf("(2) A longer quest\n");
+    printf("\n");
+    printf("(3) Ultimate quest to fight against Lucifer\n");
+    printf("\n");
+    printf("(s) Leave the Inn and go back to the main square\n");
+    printf("\n");
     
     selection = getchar();
     
@@ -861,45 +907,75 @@ void inn(void)
 }
 
 
-void way_there(void)
+void normalize_player(void)
 {
-    way_there_start:
+    uint8_t count = 0;
+    uint8_t i;
+    
+    for(i=0;i<player_party_size;++i)
+    {
+        if(get_base_life(player_party[i]))
+        {
+            ++count;
+            // *aux_player_party[count]= *player_party[i];
+        }
+    }
+    
+    printf("\n--- DEBUG normalize_player\n");
+    printf("DEBUG ---- count %d\n", count);
+    
+    // for(i=0;i<count;++i)
+    // {
+        // *player_party[i] = *aux_player_party[i]; // TODO: change to multiple single field copies for 8-bit targets
+    // }
+    player_party_size = count;
+}
+
+
+void journey(void)
+{
+    initEnemyParty();
+    
+    journey_start:
+    printf("\n\n");
     printf("You are on the week number %u of your journey\n", quest_week);
+    if(player_location==WAY_BACK)
+    {
+        printf("You are on your way back to the village"); 
+    }
+    printf("\n");
+        
+    printf("Your party is made of %d soldiers\n", player_party_size);
+    
+    printf("\n");
+    
+    printf("You encounter a group of %d evil enemies\n", enemy_party_size);
+    printf("\n");
+    
+    printf("(f) Fight the enemies");
+    
+    printf("\n");
     
     selection = getchar();
     switch(selection)
     {
         case 'f': 
             party_fight();
+            normalize_player(); // TODO: to be correctly implemented
+            // showParty(player_party, player_party_size, showFightStats);
+            
+            printf("\n---DEBUG after party_fight, normalize, showParty\n");
+            
             break;
         default: 
-            goto way_there_start;
+            goto journey_start;
     }
+
     if(++quest_week==destination_distance)
     {
         player_location = destination;
-    }
-    
-}
-
-void way_back(void)
-{
-    way_back_start:
-    printf("You are on the week number %u of your return journey\n", quest_week);
-    
-    selection = getchar();
-    switch(selection)
-    {
-        case 'f': 
-            party_fight();
-            break;
-        default: 
-            goto way_back_start;
-    }
-    if(--quest_week==0)
-    {
-        player_location = destination;
-    }
+        quest_week = 1;
+    }    
 }
 
 
@@ -945,7 +1021,7 @@ void market(void)
     selection = getchar();
     switch(selection)
     {
-        case 'b':
+        case 'b': // Go back
             player_location = WAY_BACK;
             quest_week = 1;
             destination_distance = MARKET_DISTANCE;
@@ -983,10 +1059,10 @@ int main(void)
                 inn();
                 break;
             case WAY_THERE:
-                way_there();
+                journey();
                 break;
             case WAY_BACK:
-                way_back();
+                journey();
                 break;
             case EASY_QUEST:
                 easy_quest();
@@ -1009,74 +1085,5 @@ int main(void)
     
     return 0;
 }
-
-/*
-int main(void)
-{
-    
-    Character *winner_ptr;
-   
-
-    initCharacters();
-    
-    initPlayerParty();
-    initEnemyParty();
-   
-    player_ptr = player_party[LEADER];
-    enemy_ptr = enemy_party[LEADER];
-   
-    showParty(player_party, player_party_size, showAllStats);
-    
-    getchar();
-    
-    showParty(enemy_party, enemy_party_size, showFightStats);
-
-    getchar();
-    
-    printf("player party speed: %u\n", party_speed(player_party,player_party_size));
-    printf("enemy party speed: %u\n", party_speed(enemy_party,enemy_party_size));
-
-    printf("party escape: %u\n", party_escape());
-
-    
-    getchar();
-    
-    party_fight();
-    
-    getchar();
-    printf("\n\n");
-    printf("-------------\n\n");
-    if(get_base_life(player_party[LEADER]))
-    {
-        winner_ptr = player_party[LEADER];
-    }
-    else
-    {
-        winner_ptr = enemy_party[LEADER];
-    }
-    printf("\n%s wins!\n", winner_ptr->name);
-    getchar();
-    printf("\n\n");
-    printf("-------------\n\n");
-
-    
-    showParty(enemy_party, enemy_party_size, showFightStats);
-    enemy_party_size = removeDeadMembers(enemy_party, enemy_party_size);
-    printf("\n\n");
-    printf("After removal\n");
-    showParty(enemy_party, enemy_party_size, showFightStats);
-    
-    printf("\n\n");
-
-    
-    showParty(player_party, player_party_size, showFightStats);
-    player_party_size = removeDeadMembers(player_party, player_party_size);
-    printf("\n\n");
-    printf("After removal\n");
-    showParty(player_party, player_party_size, showFightStats);
-
-    return EXIT_SUCCESS;
-}
-*/
 
 
